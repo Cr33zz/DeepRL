@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2026
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeepQL", "DeepQL\DeepQL.csproj", "{D6087C9A-B566-4D01-828B-A2F206920A6E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeepQL.Tests", "DeepQL.Tests\DeepQL.Tests.csproj", "{7E9618AE-4301-4B88-80FD-DBAD8FC8295B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D6087C9A-B566-4D01-828B-A2F206920A6E}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{D6087C9A-B566-4D01-828B-A2F206920A6E}.Debug|x64.ActiveCfg = Debug|x64
+		{D6087C9A-B566-4D01-828B-A2F206920A6E}.Debug|x64.Build.0 = Debug|x64
+		{D6087C9A-B566-4D01-828B-A2F206920A6E}.Release|Any CPU.ActiveCfg = Release|x64
+		{D6087C9A-B566-4D01-828B-A2F206920A6E}.Release|x64.ActiveCfg = Release|x64
+		{D6087C9A-B566-4D01-828B-A2F206920A6E}.Release|x64.Build.0 = Release|x64
+		{7E9618AE-4301-4B88-80FD-DBAD8FC8295B}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{7E9618AE-4301-4B88-80FD-DBAD8FC8295B}.Debug|x64.ActiveCfg = Debug|x64
+		{7E9618AE-4301-4B88-80FD-DBAD8FC8295B}.Debug|x64.Build.0 = Debug|x64
+		{7E9618AE-4301-4B88-80FD-DBAD8FC8295B}.Release|Any CPU.ActiveCfg = Release|x64
+		{7E9618AE-4301-4B88-80FD-DBAD8FC8295B}.Release|x64.ActiveCfg = Release|x64
+		{7E9618AE-4301-4B88-80FD-DBAD8FC8295B}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5AB0A03E-CFF9-4D24-A9F3-C1BB21A677FA}
+	EndGlobalSection
+EndGlobal
