@@ -4,11 +4,11 @@ using Neuro;
 using Neuro.Layers;
 using Neuro.Tensors;
 
-namespace DeepQL.Models
+namespace DeepQL.Q
 {
-    public class DQLModel : ModelBase
+    public class DQN : QFunc
     {
-        public DQLModel(Shape inputShape, int numberOfActions, double learningRate, double discountFactor, int temporalDataSize = 3)
+        public DQN(Shape inputShape, int numberOfActions, double learningRate, double discountFactor, int temporalDataSize = 3)
             :base(inputShape, numberOfActions)
         {
             Net = new NeuralNetwork("DQN");
@@ -27,11 +27,18 @@ namespace DeepQL.Models
         public override void OnTransition(Tensor state, int action, double reward, Tensor nextState)
         {
             UpdateTemporalData(state);
-            Memory.Push(new Transition(Tensor.Merge(TemporalData), action, reward, nextState));
+            //Memory.Push(new Transition(Tensor.Merge(TemporalData, 2), action, reward, nextState)); merge over depth
+        }
+
+        public override int GetBestAction(Tensor state)
+        {
+            var output = Net.FeedForward(state);
+            return output.ArgMax();
         }
 
         protected override void Train(List<Transition> transitions)
         {
+            // make an input batch from transitions and perform a back propagation step
 
         }
 

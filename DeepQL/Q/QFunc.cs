@@ -1,14 +1,16 @@
 ﻿using System.Collections.Generic;
 using Neuro.Tensors;
 
-namespace DeepQL.Models
+namespace DeepQL.Q
 {
-    public abstract class ModelBase
+    public abstract class QFunc
     {
-        protected ModelBase(Shape inputShape, int numberOfActions)
+        protected QFunc(Shape inputShape, int numberOfActions)
         {
             NumberOfActions = numberOfActions;
         }
+
+        public abstract int GetBestAction(Tensor state);
 
         public abstract void OnTransition(Tensor state, int action, double reward, Tensor nextState);
         

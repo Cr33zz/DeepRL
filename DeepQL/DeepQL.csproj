@@ -61,10 +61,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Agent.cs" />
+    <Compile Include="BehaviorPolicies\BasePolicy.cs" />
+    <Compile Include="BehaviorPolicies\EpsilonGreedyPolicy.cs" />
+    <Compile Include="BehaviorPolicies\RandomPolicy.cs" />
     <Compile Include="Environment.cs" />
-    <Compile Include="Models\DQLModel.cs" />
-    <Compile Include="Models\ModelBase.cs" />
-    <Compile Include="Models\QLModel.cs" />
+    <Compile Include="Q\DQN.cs" />
+    <Compile Include="Q\QFunc.cs" />
+    <Compile Include="Q\QN.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ReplayMemory.cs" />
     <Compile Include="Transition.cs" />
