@@ -55,7 +55,8 @@
     <Reference Include="Cudafy.Translator">
       <HintPath>..\DeepQL\Cudafy.Translator.dll</HintPath>
     </Reference>
-    <Reference Include="DeepQL">
+    <Reference Include="DeepQL, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\DeepQL\bin\x64\Debug\DeepQL.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">

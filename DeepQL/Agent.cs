@@ -1,11 +1,12 @@
-﻿using Neuro.Tensors;
+﻿using DeepQL.Environments;
+using Neuro.Tensors;
 using DeepQL.Q;
 
 namespace DeepQL
 {
     public abstract class Agent
     {
-        public Agent(QFunc qFunction, Environment env)
+        public Agent(QFunc qFunction, Env env)
         {
             QFunction = qFunction;
             Env = env;
@@ -18,8 +19,9 @@ namespace DeepQL
 
         public void TakeAction(int action)
         {
-            var nextState = new Tensor(Env.StateShape());
-            var reward = Env.Step(action, nextState);
+            Tensor nextState;
+            double reward;
+            var stop = Env.Step(action, out nextState, out reward);
 
             QFunction.OnTransition(LastState, action, reward, nextState);
 
@@ -28,6 +30,6 @@ namespace DeepQL
 
         private Tensor LastState;
         private QFunc QFunction;
-        private Environment Env;
+        private Env Env;
     }
 }

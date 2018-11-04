@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeepQL", "DeepQL\DeepQL.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DeepQL.Tests", "DeepQL.Tests\DeepQL.Tests.csproj", "{7E9618AE-4301-4B88-80FD-DBAD8FC8295B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleTaxi", "ExampleTaxi\ExampleTaxi.csproj", "{2A4F0770-EB56-493E-9A40-471C6BFDBEB8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,14 @@ Global
 		{7E9618AE-4301-4B88-80FD-DBAD8FC8295B}.Release|Any CPU.ActiveCfg = Release|x64
 		{7E9618AE-4301-4B88-80FD-DBAD8FC8295B}.Release|x64.ActiveCfg = Release|x64
 		{7E9618AE-4301-4B88-80FD-DBAD8FC8295B}.Release|x64.Build.0 = Release|x64
+		{2A4F0770-EB56-493E-9A40-471C6BFDBEB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A4F0770-EB56-493E-9A40-471C6BFDBEB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A4F0770-EB56-493E-9A40-471C6BFDBEB8}.Debug|x64.ActiveCfg = Debug|x64
+		{2A4F0770-EB56-493E-9A40-471C6BFDBEB8}.Debug|x64.Build.0 = Debug|x64
+		{2A4F0770-EB56-493E-9A40-471C6BFDBEB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A4F0770-EB56-493E-9A40-471C6BFDBEB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A4F0770-EB56-493E-9A40-471C6BFDBEB8}.Release|x64.ActiveCfg = Release|x64
+		{2A4F0770-EB56-493E-9A40-471C6BFDBEB8}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
