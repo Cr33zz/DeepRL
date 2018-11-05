@@ -19,6 +19,11 @@ namespace DeepQL.Spaces
             return state.Shape.Equals(Shape) && state[0] >= 0 && state[0] < N;
         }
 
+        public override int NumberOfValues()
+        {
+            return N;
+        }
+
         private readonly int N;
     }
 }

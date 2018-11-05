@@ -7,7 +7,7 @@ using DeepQL.Spaces;
 using Neuro.Tensors;
 using Point = System.Tuple<int, int>;
 
-namespace ExampleTaxi
+namespace DeepQL.Gyms
 {
     /**
     The Taxi Problem (implementation based on OpenAI gym https://github.com/openai/gym/blob/master/gym/envs/toy_text/taxi.py)
@@ -45,10 +45,10 @@ namespace ExampleTaxi
         public TaxiEnv()
             : base(STATES_NUM, ACTIONS_NUM)
         {
-            const int nR = 5;
-            const int nC = 5;
-            const int maxR = nR - 1;
-            const int maxC = nC - 1;
+            const int rowsNum = 5;
+            const int colsNum = 5;
+            const int maxRow = rowsNum - 1;
+            const int maxCol = colsNum - 1;
 
             for (int row = 0; row < 5; ++row)
             for (int col = 0; col < 5; ++col)
@@ -71,14 +71,18 @@ namespace ExampleTaxi
                     Point taxiLoc = new Point(row, col);
 
                     if (a == 0)
-                        newRow = Math.Min(row + 1, maxR);
+                        newRow = Math.Min(row + 1, maxRow);
                     else if (a == 1)
                         newRow = Math.Max(row - 1, 0);
 
                     if (a == 2 && MAP[1 + row][2 * col + 2] == ':')
-                        newCol = Math.Min(col + 1, maxC);
+                    {
+                        newCol = Math.Min(col + 1, maxCol);
+                    }
                     else if (a == 3 && MAP[1 + row][2 * col] == ':')
+                    {
                         newCol = Math.Max(col - 1, 0);
+                    }
                     else if (a == 4) // pickup
                     {
                         if (passIdx < 4 && taxiLoc.Equals(LOCATIONS_INDICES[passIdx]))
@@ -94,9 +98,13 @@ namespace ExampleTaxi
                             reward = 20;
                         }
                         else if (LOCATIONS_INDICES.Contains(taxiLoc) && passIdx == 4)
+                        {
                             newPassIdx = LOCATIONS_INDICES.IndexOf(taxiLoc);
+                        }
                         else
+                        {
                             reward = -10;
+                        }
                     }
 
                     int newState = EncodeState(newRow, newCol, newPassIdx, destidx);
@@ -109,18 +117,7 @@ namespace ExampleTaxi
 
         public override void Render()
         {
-            var output = MAP.Clone();
-
-            OutputColorizer colorizer = new OutputColorizer();
-
-            foreach (var line in MAP)
-            {
-                foreach (var c in line)
-                {
-                    colorizer.Add(c.ToString());
-                }
-                colorizer.AddLine("");
-            }
+            OutputColorizer colorizer = OutputColorizer.FromStringsAsChars(MAP);
 
             int taxiRow, taxiCol, passIdx, destIdx;
             DecodeState(State, out taxiRow, out taxiCol, out passIdx, out destIdx);
@@ -181,58 +178,5 @@ namespace ExampleTaxi
         private const int ACTIONS_NUM = 6;
         private const int STATES_NUM = 5*5*5*4;
         private readonly List<Point> LOCATIONS_INDICES = new List<Point> { new Point(0, 0), new Point(0, 4), new Point(4, 0), new Point(4, 3) };        
-    }
-
-    public class OutputColorizer
-    {
-        private class ColoredStr
-        {
-            public string Str;
-            public ConsoleColor Color;
-            public bool Highlight;
-        }
-
-        public void AddLine(string s, ConsoleColor color = ConsoleColor.White, bool highlight = false)
-        {
-            Add(s, color, highlight, true);
-        }
-
-        public void Add(string s, ConsoleColor color = ConsoleColor.White, bool highlight = false, bool newLine = false)
-        {
-            if (Lines.Count == 0)
-                Lines.Add(new List<ColoredStr>());
-
-            if (s.Length > 0)
-                Lines.Last().Add(new ColoredStr(){Str = s, Color = color, Highlight = highlight});
-
-            if (newLine)
-                Lines.Add(new List<ColoredStr>());
-        }
-
-        public void Override(int line, int col, string s, ConsoleColor color = ConsoleColor.White, bool highlight = false)
-        {
-            Lines[line][col] = new ColoredStr() { Str = s, Color = color, Highlight = highlight };
-        }
-
-        public void Print()
-        {
-            foreach (var line in Lines)
-            {
-                foreach (var coloredStr in line)
-                {
-                    if (coloredStr.Highlight)
-                        Console.BackgroundColor = coloredStr.Color;
-                    else
-                        Console.ForegroundColor = coloredStr.Color;
-
-                    Console.Write(coloredStr.Str);
-                    Console.ResetColor();
-                }
-
-                Console.WriteLine();
-            }
-        }
-
-        private List<List<ColoredStr>> Lines = new List<List<ColoredStr>>();
     }
 }

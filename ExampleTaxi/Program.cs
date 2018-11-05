@@ -1,4 +1,7 @@
-﻿using DeepQL.Environments;
+﻿using System;
+using DeepQL.Agents;
+using DeepQL.Environments;
+using DeepQL.Gyms;
 using Neuro.Tensors;
 
 namespace ExampleTaxi
@@ -8,13 +11,15 @@ namespace ExampleTaxi
         static void Main(string[] args)
         {
             Env env = new TaxiEnv();
-            env.Reset();
 
-            Tensor nextState;
-            double reward;
+            Agent agent = new AgentQTable(env, 0.7, 0.618, true);
+            agent.Train(50000, 100);
+            Console.WriteLine($"Average reward {agent.Test(100, 100)}");
 
-            while (!env.Step((int)env.ActionSpace.Sample()[0], out nextState, out reward))
-                env.Render();
+            //env.Reset();
+
+            //while (!env.Step((int)env.ActionSpace.Sample()[0], out var nextState, out var reward))
+            //    env.Render();
 
             return;
         }

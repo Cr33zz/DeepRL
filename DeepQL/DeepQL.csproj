@@ -60,13 +60,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Agent.cs" />
+    <Compile Include="Agents\Agent.cs" />
+    <Compile Include="Agents\AgentQTable.cs" />
     <Compile Include="BehaviorPolicies\BasePolicy.cs" />
     <Compile Include="BehaviorPolicies\EpsilonGreedyPolicy.cs" />
     <Compile Include="BehaviorPolicies\RandomPolicy.cs" />
     <Compile Include="Environments\DiscreteEnv.cs" />
     <Compile Include="Environments\Env.cs" />
     <Compile Include="GlobalRandom.cs" />
+    <Compile Include="Gyms\TaxiEnv.cs" />
+    <Compile Include="OutputColorizer.cs" />
     <Compile Include="Spaces\Box.cs" />
     <Compile Include="Spaces\Discrete.cs" />
     <Compile Include="Spaces\Space.cs" />
@@ -77,8 +80,6 @@
     <Compile Include="ReplayMemory.cs" />
     <Compile Include="Transition.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Agent\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
