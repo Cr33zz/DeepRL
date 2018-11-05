@@ -15,29 +15,28 @@ namespace DeepQL.Environments
         {
             InitialStateDistribution = new double[statesNum];
             TransitionsTable = new List<Transition>[statesNum, actionsNum];
+            State = new Tensor(new Shape(1));
+            LastAction = new Tensor(new Shape(1));
         }
 
-        public override bool Step(int action, out Tensor observation, out double reward)
+        public override bool Step(Tensor action, out Tensor observation, out double reward)
         {
-            var transitions = TransitionsTable[State,action];
+            var transitions = TransitionsTable[StateAsInt, (int)action[0]];
             int tInx = CategoricalSample(transitions.Select(x => x.Probability));
 
             var t = transitions[tInx];
-            LastAction = action;
-            State = t.NextState;
-            observation = new Tensor(new Shape(1));
-            observation[0] = t.NextState;
+            LastActionAsInt = (int)action[0];
+            StateAsInt = t.NextState;
+            observation = new Tensor(new double[] { t.NextState }, new Shape(1));
             reward = t.Reward;
             return t.Done;
         }
 
         public override Tensor Reset()
         {
-            LastAction = -1;
-            State = CategoricalSample(InitialStateDistribution);
-            var initialObservation = new Tensor(new Shape(1));
-            initialObservation[0] = State;
-            return initialObservation;
+            LastActionAsInt = -1;
+            StateAsInt = CategoricalSample(InitialStateDistribution);
+            return State.Clone();
         }
 
         public override void Seed(int seed = 0)
@@ -89,8 +88,8 @@ namespace DeepQL.Environments
             public bool Done;
         }
 
-        protected int State { get; private set; }
-        protected int LastAction { get; private set; } = -1;
+        public int StateAsInt { get { return (int)State[0]; } private set { State[0] = value; } }
+        public int LastActionAsInt { get { return (int)LastAction[0]; } private set { LastAction[0] = value; } }
 
         private readonly double[] InitialStateDistribution;
         private readonly List<Transition>[,] TransitionsTable;

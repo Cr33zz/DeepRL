@@ -20,15 +20,15 @@ namespace DeepQL.Agents
 
         public abstract double Test(int episodes, int maxStepsPerEpisode);
 
-        public void TakeAction()
-        {
-            int action = ChooseNextAction();
-            var stop = Env.Step(action, out var nextState, out var reward);
+        //public void TakeAction()
+        //{
+        //    int action = ChooseNextAction();
+        //    var stop = Env.Step(action, out var nextState, out var reward);
 
-            OnStep(State, action, reward, nextState);
+        //    OnStep(State, action, reward, nextState);
 
-            State = nextState;
-        }
+        //    State = nextState;
+        //}
 
         protected abstract int ChooseNextAction();
 

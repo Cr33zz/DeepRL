@@ -39,7 +39,7 @@ namespace DeepQL.Gyms
     - yellow: empty taxi
     - green: full taxi
     - other letters: locations
-    */
+    **/
     public class TaxiEnv : DiscreteEnv
     {
         public TaxiEnv()
@@ -120,7 +120,7 @@ namespace DeepQL.Gyms
             OutputColorizer colorizer = OutputColorizer.FromStringsAsChars(MAP);
 
             int taxiRow, taxiCol, passIdx, destIdx;
-            DecodeState(State, out taxiRow, out taxiCol, out passIdx, out destIdx);
+            DecodeState(StateAsInt, out taxiRow, out taxiCol, out passIdx, out destIdx);
 
             if (passIdx < 4)
             {
@@ -134,8 +134,8 @@ namespace DeepQL.Gyms
             colorizer.Override(1 + taxiRow, 2 * taxiCol + 1, MAP[1 + taxiRow][2 * taxiCol + 1].ToString(), passIdx < 4 ? ConsoleColor.Yellow : ConsoleColor.Green, true);
 
             var actionName = new [] {"South", "North", "East", "West", "Pickup", "Dropoff"};
-            if (LastAction >= 0)
-                colorizer.AddLine(actionName[LastAction]);
+            if (LastActionAsInt >= 0)
+                colorizer.AddLine(actionName[LastActionAsInt]);
 
             Console.Clear();
             colorizer.Print();

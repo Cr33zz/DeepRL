@@ -5,17 +5,27 @@ namespace DeepQL.Spaces
 {
     public class Box : Space
     {
-        public Box(int low, int high, Shape shape)
+        public Box(double low, double high, Shape shape)
             : base(shape)
         {
-            Low = low;
-            High = high;
+            Low = new Tensor(shape);
+            Low.FillWithValue(low);
+            High = new Tensor(shape);
+            High.FillWithValue(high);
+        }
+
+        public Box(double[] low, double[] high, Shape shape)
+            : base(shape)
+        {
+            Low = new Tensor(low, shape);
+            High = new Tensor(high, shape);
         }
 
         public override Tensor Sample()
         {
             var t = new Tensor(Shape);
-            t.Map(x => GlobalRandom.Rng.Next(Low, High + 1), t);
+            for (int i = 0; i < Shape.Length; ++i)
+                t.SetFlat(Low.GetFlat(i) + (High.GetFlat(i) - Low.GetFlat(i)) * GlobalRandom.Rng.NextDouble(), i);
             return t;
         }
 
@@ -23,14 +33,14 @@ namespace DeepQL.Spaces
         {
             for (int i = 0; i < Shape.Length; ++i)
             {
-                if (state.GetFlat(i) < Low || state.GetFlat(i) > High)
+                if (state.GetFlat(i) < Low.GetFlat(i) || state.GetFlat(i) > High.GetFlat(i))
                     return false;
             }
 
             return true;
         }
 
-        public readonly int Low;
-        public readonly int High;
+        public readonly Tensor Low;
+        public readonly Tensor High;
     }
 }

@@ -12,6 +12,7 @@
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
@@ -52,6 +53,8 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -67,9 +70,14 @@
     <Compile Include="BehaviorPolicies\RandomPolicy.cs" />
     <Compile Include="Environments\DiscreteEnv.cs" />
     <Compile Include="Environments\Env.cs" />
-    <Compile Include="GlobalRandom.cs" />
+    <Compile Include="Misc\GlobalRandom.cs" />
+    <Compile Include="Gyms\CartPoleEnv.cs" />
     <Compile Include="Gyms\TaxiEnv.cs" />
-    <Compile Include="OutputColorizer.cs" />
+    <Compile Include="Misc\KinematicIntegrator.cs" />
+    <Compile Include="Misc\OutputColorizer.cs" />
+    <Compile Include="Misc\Viewer.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Spaces\Box.cs" />
     <Compile Include="Spaces\Discrete.cs" />
     <Compile Include="Spaces\Space.cs" />
