@@ -14,21 +14,30 @@ namespace DeepQL.Misc
             public Viewer(int width, int height)
             {
                 ClientSize = new Size(width, height);
+                ((System.ComponentModel.ISupportInitialize)(OpenGLControl)).BeginInit();
                 OpenGLControl.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
                 OpenGLControl.DrawFPS = false;
                 OpenGLControl.FrameRate = 28;
-                OpenGLControl.Location = new System.Drawing.Point(12, 12);
+                OpenGLControl.Location = new System.Drawing.Point(0, 0);
                 OpenGLControl.Name = "OpenGL";
                 OpenGLControl.RenderContextType = SharpGL.RenderContextType.FBO;
                 OpenGLControl.RenderTrigger = RenderTrigger.Manual;
                 OpenGLControl.Size = new System.Drawing.Size(width, height);
                 OpenGLControl.TabIndex = 0;
-                OpenGLControl.OpenGLDraw += new RenderEventHandler(OpenGLDraw);
+                OpenGLControl.OpenGLDraw += new RenderEventHandler(OpenGLDrawFunc);
                 OpenGLControl.OpenGL.Enable(OpenGL.GL_BLEND);
+                OpenGLControl.OpenGL.Enable(OpenGL.GL_CULL_FACE);
                 OpenGLControl.OpenGL.BlendFunc(OpenGL.GL_SRC_ALPHA, OpenGL.GL_ONE_MINUS_SRC_ALPHA);
-
+                OpenGLControl.OpenGL.Disable(OpenGL.GL_DEPTH_TEST);
+                OpenGLControl.OpenGL.Disable(OpenGL.GL_SCISSOR_TEST);
+                OpenGLControl.OpenGL.Viewport(0, 0, width, height);
                 Controls.Add(OpenGLControl);
+                ((System.ComponentModel.ISupportInitialize)(OpenGLControl)).EndInit();
+
                 Name = Text = "Viewer";
+                FormBorderStyle = FormBorderStyle.None;
+
+                Show();
             }
 
             //public void SetBounds(int left, int right, int bottom, int top)
@@ -56,22 +65,54 @@ namespace DeepQL.Misc
                 Application.DoEvents();
             }
 
-            private void OpenGLDraw(object sender, RenderEventArgs e)
+            private void OpenGLDrawFunc(object sender, RenderEventArgs e)
             {
                 OpenGL gl = OpenGLControl.OpenGL;
 
-                gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
-                gl.LoadIdentity();
+                gl.ClearColor(0.2f, 0.25f, 0.3f, 1.0f);
+                gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT/* | OpenGL.GL_DEPTH_BUFFER_BIT*/);
 
-                Trans.Enable(gl);
-                foreach (var geom in Geoms)
-                    geom.Render(gl);
-                foreach (var geom in OneTimeGeoms)
-                    geom.Render(gl);
-                Trans.Disable(gl);
+                int[] viewport = new int[4];
+                gl.Ortho(0, Width, 0, Height, -1, 1);
 
-                OneTimeGeoms.Clear();
+                ////  Create the appropriate modelview matrix.
+                //gl.MatrixMode(OpenGL.GL_MODELVIEW);
+                //gl.PushMatrix();
+                //gl.LoadIdentity();
+
+
+
+                //gl.Translate(0, 0, 0);               // Move Left And Into The Screen
+                //gl.Rotate(rtri, 0.0f, 1.0f, 0.0f);				// Rotate The Pyramid On It's Y Axis
+                gl.Begin(OpenGL.GL_TRIANGLES);                  // Start Drawing The Pyramid
+                gl.Color(1.0f, 0.0f, 0.0f);         // Red
+                gl.Vertex(50, 0);            // Top Of Triangle (Front)
+                gl.Color(0.0f, 1.0f, 0.0f);         // Green
+                gl.Vertex(0, 100);          // Left Of Triangle (Front)
+                gl.Color(0.0f, 0.0f, 1.0f);         // Blue
+                gl.Vertex(100, 100);           // Right Of Triangle (Front)
+                gl.End();						// Done Drawing The Pyramid
+
+
+
+
+                //Trans.Enable(gl);
+                //foreach (var geom in Geoms)
+                //    geom.Render(gl);
+                //foreach (var geom in OneTimeGeoms)
+                //    geom.Render(gl);
+                //Trans.Disable(gl);
+
+                //OneTimeGeoms.Clear();
+
+                //gl.MatrixMode(OpenGL.GL_MODELVIEW);
+                //gl.Disable(OpenGL.GL_DEPTH_TEST);
+
+                rtri += 3.0f;// 0.2f;						// Increase The Rotation Variable For The Triangle 
             }
+
+            float rtri = 0;
+
 
             protected override void Dispose(bool disposing)
             {
@@ -90,6 +131,7 @@ namespace DeepQL.Misc
             protected Geom()
             {
                 _Color = new Color(new double[] {0, 0, 0, 1});
+                AddAttr(_Color);
             }
 
             public void Render(OpenGL gl)
@@ -110,7 +152,7 @@ namespace DeepQL.Misc
 
             public void SetColor(double r, double g, double b)
             {
-                _Color = new Color(new double[] {r, g, b, 1});
+                _Color.Vec4 = new double[] {r, g, b, 1};
             }
 
             private Color _Color;
@@ -229,9 +271,10 @@ namespace DeepQL.Misc
 
             protected override void OnRender(OpenGL gl)
             {
+                //gl.LineWidth(2);
                 gl.Begin(OpenGL.GL_LINES);
-                gl.Vertex(Start);
-                gl.Vertex(End);
+                gl.Vertex(Start[0], Start[1], 0);
+                gl.Vertex(End[0], End[1], 0);
                 gl.End();
             }
 

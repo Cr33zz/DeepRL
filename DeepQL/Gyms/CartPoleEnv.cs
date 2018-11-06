@@ -176,6 +176,7 @@ namespace DeepQL.Gyms
         public override void Dispose()
         {
             viewer.Dispose();
+            viewer = null;
             base.Dispose();
         }
 
