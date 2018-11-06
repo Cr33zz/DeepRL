@@ -15,7 +15,7 @@ namespace DeepQL.Environments
         // Returns true when end state has been reached
         public abstract bool Step(Tensor action, out Tensor observation, out double reward);
         public abstract Tensor Reset();
-        public abstract void Render();
+        public abstract byte[] Render(bool toRgbArray = false);
         public virtual void Seed(int seed = 0) { }
         public virtual void Dispose() { }
 

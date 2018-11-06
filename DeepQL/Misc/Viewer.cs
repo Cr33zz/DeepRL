@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace DeepQL.Misc
@@ -58,8 +60,9 @@ namespace DeepQL.Misc
                 OneTimeGeoms.Add(geom);
             }
 
-            public void ManualRender()
+            public void Render(byte[] outRgbArray = null)
             {
+                OutputRrbArray = outRgbArray;
                 OpenGLControl.DoRender();
                 Application.DoEvents();
             }
@@ -85,6 +88,9 @@ namespace DeepQL.Misc
                 Trans.Disable(gl);
 
                 OneTimeGeoms.Clear();
+
+                if (OutputRrbArray != null)
+                    gl.ReadPixels(0, 0, Width, Height, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, OutputRrbArray);
             }
 
             protected override void Dispose(bool disposing)
@@ -93,6 +99,7 @@ namespace DeepQL.Misc
                 base.Dispose(disposing);
             }
 
+            private byte[] OutputRrbArray;
             private readonly OpenGLControl OpenGLControl = new OpenGLControl();
             private readonly List<Geom> Geoms = new List<Geom>();
             private readonly List<Geom> OneTimeGeoms = new List<Geom>();

@@ -1,6 +1,9 @@
 ﻿using Neuro.Tensors;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
 using DeepQL.Environments;
 using DeepQL.Spaces;
 using DeepQL.Misc;
@@ -110,7 +113,7 @@ namespace DeepQL.Gyms
             return State.Clone();
         }
 
-        public override void Render()
+        public override byte[] Render(bool toRgbArray = false)
         {
             const int SCREEN_WIDTH = 600;
             const int SCREEN_HEIGHT = 400;
@@ -156,7 +159,7 @@ namespace DeepQL.Gyms
             }
 
             if (State == null)
-                return;
+                return null;
 
             {
                 // Edit the pole polygon vertex
@@ -168,7 +171,9 @@ namespace DeepQL.Gyms
             CartTrans.SetTranslation(cartX, cartY);
             PoleTrans.SetRotation(-State[2]);
 
-            Viewer.ManualRender();
+            byte[] rgbArray = toRgbArray ? new byte[SCREEN_WIDTH * SCREEN_HEIGHT * 3] : null;
+            Viewer.Render(rgbArray);
+            return rgbArray;
         }
 
         public override void Dispose()

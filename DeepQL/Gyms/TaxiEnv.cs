@@ -115,7 +115,7 @@ namespace DeepQL.Gyms
             FinalizeInitialStateDistribution();
         }
 
-        public override void Render()
+        public override byte[] Render(bool toRgbArray = false)
         {
             OutputColorizer colorizer = OutputColorizer.FromStringsAsChars(MAP);
 
@@ -139,6 +139,8 @@ namespace DeepQL.Gyms
 
             Console.Clear();
             colorizer.Print();
+
+            return null;
         }
 
         private int EncodeState(int taxiRow, int taxiCol, int passIdx, int destIdx)
