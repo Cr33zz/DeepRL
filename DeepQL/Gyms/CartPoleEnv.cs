@@ -1,6 +1,8 @@
 ﻿using DeepQL.Environments;
 using Neuro.Tensors;
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 using DeepQL.Spaces;
 using DeepQL.Misc;
 
@@ -104,17 +106,77 @@ namespace DeepQL.Gyms
 
         public override Tensor Reset()
         {
-            throw new NotImplementedException();
+            State = new Tensor(new Shape(4));
+            State.FillWithRand(-1, -0.05, 0.05);
+            steps_beyond_done = -1;
+            return State.Clone();
         }
 
         public override void Render()
         {
-            throw new NotImplementedException();
+            int screen_width = 600;
+            int screen_height = 400;
+
+            double world_width = x_threshold * 2;
+            double scale = screen_width / world_width;
+            double carty = 100; // TOP OF CART
+            double polewidth = 10.0;
+            double polelen = scale * (2 * length);
+            double cartwidth = 50.0;
+            double cartheight = 30.0;
+
+            if (viewer == null)
+            {
+                viewer = new Rendering.Viewer(screen_width, screen_height);
+                double l = -cartwidth / 2;
+                double r = cartwidth / 2;
+                double t = cartheight / 2;
+                double b = -cartheight / 2;
+                double axleoffset = cartheight / 4.0;
+                var cart = new Rendering.FilledPolygon(new List<double[]> { new[]{l, b}, new[] { l, t}, new[] { r, t}, new[] { r, b}});
+                carttrans = new Rendering.Transform();
+                cart.AddAttr(carttrans);
+                viewer.AddGeom(cart);
+                l = -polewidth / 2;
+                r = polewidth / 2;
+                t = polelen - polewidth / 2;
+                b = -polewidth / 2;
+                pole = new Rendering.FilledPolygon(new List<double[]> { new[] { l, b }, new[] { l, t }, new[] { r, t }, new[] { r, b } });
+                pole.SetColor(.8, .6, .4);
+                poletrans = new Rendering.Transform(new[] {0, axleoffset});
+                pole.AddAttr(poletrans);
+                pole.AddAttr(carttrans);
+                viewer.AddGeom(pole);
+                axle = Rendering.MakeCircle(polewidth / 2);
+                axle.AddAttr(poletrans);
+                axle.AddAttr(carttrans);
+                axle.SetColor(.5, .5, .8);
+                viewer.AddGeom(axle);
+                track = new Rendering.Line(new []{0, carty}, new []{screen_width, carty});
+                track.SetColor(0, 0, 0);
+                viewer.AddGeom(track);
+            }
+
+            //if state is None: return None
+
+            {
+                // Edit the pole polygon vertex
+                double l = -polewidth / 2, r = polewidth / 2, t = polelen - polewidth / 2, b = polewidth / 2;
+                pole.V = new List<double[]> {new[] {l, b}, new[] {l, t}, new[] {r, t}, new[] {r, b}};
+            }
+
+            var x = State;
+            var cartx = x[0] * scale + screen_width / 2.0; // MIDDLE OF CART
+            carttrans.SetTranslation(cartx, carty);
+            poletrans.SetRotation(-x[2]);
+
+            viewer.ManualRender();
         }
 
         public override void Dispose()
         {
-            throw new NotImplementedException();
+            viewer.Dispose();
+            base.Dispose();
         }
 
         private enum EKinematicIntegrator
@@ -136,8 +198,13 @@ namespace DeepQL.Gyms
         // Angle at which to fail the episode
         private const double theta_threshold_radians = 12 * 2 * Math.PI / 360;
         private const double x_threshold = 2.4;
-        
-        Viewer viewer;
+
+        private Rendering.Viewer viewer;
+        private Rendering.FilledPolygon pole;
+        private Rendering.Geom axle;
+        private Rendering.Geom track;
+        private Rendering.Transform carttrans;
+        private Rendering.Transform poletrans;
 
         int steps_beyond_done = -1;
     }

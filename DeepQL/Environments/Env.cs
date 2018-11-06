@@ -19,6 +19,11 @@ namespace DeepQL.Environments
         public virtual void Seed(int seed = 0) { }
         public virtual void Dispose() { }
 
+        public bool Step(int action, out Tensor observation, out double reward)
+        {
+            return Step(new Tensor(new double[] {action}, new Shape(1)), out observation, out reward);
+        }
+
         public readonly Space ActionSpace;
         public readonly Space ObservationSpace;
         public Tensor State { get; protected set; }

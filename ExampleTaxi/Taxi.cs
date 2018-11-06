@@ -2,11 +2,10 @@
 using DeepQL.Agents;
 using DeepQL.Environments;
 using DeepQL.Gyms;
-using Neuro.Tensors;
 
-namespace ExampleTaxi
+namespace Examples
 {
-    class Program
+    class Taxi
     {
         static void Main(string[] args)
         {

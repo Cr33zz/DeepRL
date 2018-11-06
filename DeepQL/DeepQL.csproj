@@ -51,6 +51,15 @@
     <Reference Include="Neuro">
       <HintPath>.\Neuro.dll</HintPath>
     </Reference>
+    <Reference Include="SharpGL, Version=2.4.0.0, Culture=neutral, PublicKeyToken=27fc851303210b27, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpGL.2.4.0.0\lib\net40\SharpGL.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpGL.SceneGraph, Version=2.4.0.0, Culture=neutral, PublicKeyToken=27fc851303210b27, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpGL.2.4.0.0\lib\net40\SharpGL.SceneGraph.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpGL.WinForms, Version=2.4.0.0, Culture=neutral, PublicKeyToken=27fc851303210b27, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpGL.WinForms.2.4.0.0\lib\net40\SharpGL.WinForms.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -75,9 +84,7 @@
     <Compile Include="Gyms\TaxiEnv.cs" />
     <Compile Include="Misc\KinematicIntegrator.cs" />
     <Compile Include="Misc\OutputColorizer.cs" />
-    <Compile Include="Misc\Viewer.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="Misc\Viewer.cs" />
     <Compile Include="Spaces\Box.cs" />
     <Compile Include="Spaces\Discrete.cs" />
     <Compile Include="Spaces\Space.cs" />
@@ -88,6 +95,8 @@
     <Compile Include="ReplayMemory.cs" />
     <Compile Include="Transition.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

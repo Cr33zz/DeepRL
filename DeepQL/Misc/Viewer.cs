@@ -1,144 +1,316 @@
-﻿using System;
+﻿using SharpGL;
+using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace DeepQL.Misc
 {
-    public class Viewer : Form
+    public static class Rendering
     {
-        public Viewer(int width, int height)
+        public class Viewer : Form
         {
-            Name = Text = "Viewer";
-            DoubleBuffered = true;
-            Paint += new PaintEventHandler(Render);
+            public Viewer(int width, int height)
+            {
+                ClientSize = new Size(width, height);
+                OpenGLControl.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+                OpenGLControl.DrawFPS = false;
+                OpenGLControl.FrameRate = 28;
+                OpenGLControl.Location = new System.Drawing.Point(12, 12);
+                OpenGLControl.Name = "OpenGL";
+                OpenGLControl.RenderContextType = SharpGL.RenderContextType.FBO;
+                OpenGLControl.RenderTrigger = RenderTrigger.Manual;
+                OpenGLControl.Size = new System.Drawing.Size(width, height);
+                OpenGLControl.TabIndex = 0;
+                OpenGLControl.OpenGLDraw += new RenderEventHandler(OpenGLDraw);
+                OpenGLControl.OpenGL.Enable(OpenGL.GL_BLEND);
+                OpenGLControl.OpenGL.BlendFunc(OpenGL.GL_SRC_ALPHA, OpenGL.GL_ONE_MINUS_SRC_ALPHA);
 
-            update_timer.Enabled = true;
-            update_timer.Interval = 5;
-            update_timer.Tick += new EventHandler(Update);
+                Controls.Add(OpenGLControl);
+                Name = Text = "Viewer";
+            }
+
+            //public void SetBounds(int left, int right, int bottom, int top)
+            //{
+            //    double scaleX = (double)Width / (right - left);
+            //    double scaleY = (double)Height / (top - bottom);
+
+            //    Trans.SetTranslation(-left * scaleX, -bottom * scaleY);
+            //    Trans.SetScale(scaleX, scaleY);
+            //}
+
+            public void AddGeom(Geom geom)
+            {
+                Geoms.Add(geom);
+            }
+
+            public void AddOneTime(Geom geom)
+            {
+                OneTimeGeoms.Add(geom);
+            }
+
+            public void ManualRender()
+            {
+                OpenGLControl.DoRender();
+                Application.DoEvents();
+            }
+
+            private void OpenGLDraw(object sender, RenderEventArgs e)
+            {
+                OpenGL gl = OpenGLControl.OpenGL;
+
+                gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
+                gl.LoadIdentity();
+
+                Trans.Enable(gl);
+                foreach (var geom in Geoms)
+                    geom.Render(gl);
+                foreach (var geom in OneTimeGeoms)
+                    geom.Render(gl);
+                Trans.Disable(gl);
+
+                OneTimeGeoms.Clear();
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                OpenGLControl.Dispose();
+                base.Dispose(disposing);
+            }
+
+            private readonly OpenGLControl OpenGLControl = new OpenGLControl();
+            private readonly List<Geom> Geoms = new List<Geom>();
+            private readonly List<Geom> OneTimeGeoms = new List<Geom>();
+            private readonly Transform Trans = new Transform();
         }
 
-        protected virtual void Render(object sender, PaintEventArgs e)
+        public abstract class Geom
         {
-            e.Graphics.CompositingQuality = CompositingQuality.GammaCorrected;
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            protected Geom()
+            {
+                _Color = new Color(new double[] {0, 0, 0, 1});
+            }
+
+            public void Render(OpenGL gl)
+            {
+                for (int i = Attrs.Count - 1; i >= 0; --i)
+                    Attrs[i].Enable(gl);
+                OnRender(gl);
+                for (int i = Attrs.Count - 1; i >= 0; --i)
+                    Attrs[i].Disable(gl);
+            }
+
+            protected abstract void OnRender(OpenGL gl);
+
+            public void AddAttr(Attr attr)
+            {
+                Attrs.Add(attr);
+            }
+
+            public void SetColor(double r, double g, double b)
+            {
+                _Color = new Color(new double[] {r, g, b, 1});
+            }
+
+            private Color _Color;
+            private readonly List<Attr> Attrs = new List<Attr>();
         }
 
-        protected virtual void Update(object sender, EventArgs e)
+        public abstract class Attr
         {
-            Refresh();
+            public abstract void Enable(OpenGL gl);
+            public virtual void Disable(OpenGL gl) { }
         }
 
-        private Timer update_timer = new Timer();
+        public class Transform : Attr
+        {
+            public Transform(double[] translation = null, double rotation = 0, double[] scale = null)
+            {
+                if (translation != null) SetTranslation(translation[0], translation[1]);
+                SetRotation(rotation);
+                if (scale != null) SetScale(scale[0], scale[1]);
+            }
 
-        public static readonly Font SMALL_FONT = new Font("Arial", 8);
-        public static readonly Font SMALL_BOLD_FONT = new Font("Arial", 8, FontStyle.Bold);
-        public static readonly Font NORMAL_FONT = new Font("Arial", 9);
-        public static readonly Font NORMAL_BOLD_FONT = new Font("Arial", 9, FontStyle.Bold);
-        public static readonly Font BIG_FONT = new Font("Arial", 10);
-        public static readonly Font BIG_BOLD_FONT = new Font("Arial", 10, FontStyle.Bold);
+            public override void Enable(OpenGL gl)
+            {
+                gl.PushMatrix();
+                gl.Translate(translation[0], translation[1], 0);
+                gl.Rotate(RAD2DEG * rotation, 0, 0, 1.0);
+                gl.Scale(scale[0], scale[1], 1);
+            }
 
-        public static readonly Pen BOLD_BLACK_PEN = new Pen(Color.Black, 3);
-        public static readonly Pen BOLD_WHITE_PEN = new Pen(Color.White, 3);
-        public static readonly Pen BOLD_RED_PEN = new Pen(Color.Red, 3);
-        public static readonly Pen BOLD_GREEN_PEN = new Pen(Color.Green, 3);
-        public static readonly Pen BOLD_BLUE_PEN = new Pen(Color.Blue, 3);
-        public static readonly Pen BOLD_LIGHT_BLUE_PEN = new Pen(Color.LightBlue, 3);
+            public override void Disable(OpenGL gl)
+            {
+                gl.PopMatrix();
+            }
+
+            public void SetTranslation(double newX, double newY)
+            {
+                translation[0] = newX;
+                translation[1] = newY;
+            }
+
+            public void SetRotation(double rot)
+            {
+                rotation = rot;
+            }
+
+            public void SetScale(double newX, double newY)
+            {
+                scale[0] = newX;
+                scale[1] = newY;
+            }
+
+            private double[] translation = new double[2];
+            private double rotation;
+            private double[] scale = new double[2] {1, 1};
+
+            private const double RAD2DEG = 57.29577951308232;
+        }
+
+        public class Color : Attr
+        {
+            public Color(double[] vec4)
+            {
+                Vec4 = (double[]) vec4.Clone();
+            }
+
+            public override void Enable(OpenGL gl)
+            {
+                gl.Color(Vec4);
+            }
+
+            public double[] Vec4;
+        }
+
+        public class Point : Geom
+        {
+            protected override void OnRender(OpenGL gl)
+            {
+                gl.Begin(OpenGL.GL_POINTS);
+                gl.Vertex(0.0, 0.0, 0.0);
+                gl.End();
+            }
+        }
+
+        public class FilledPolygon : Geom
+        {
+            public FilledPolygon(List<double[]> v)
+            {
+                V = new List<double[]>(v);
+            }
+
+            protected override void OnRender(OpenGL gl)
+            {
+                if (V.Count == 4)
+                    gl.Begin(OpenGL.GL_QUADS);
+                else if (V.Count > 4)
+                    gl.Begin(OpenGL.GL_POLYGON);
+                else
+                    gl.Begin(OpenGL.GL_TRIANGLES);
+
+                foreach (var p in V)
+                    gl.Vertex(p[0], p[1], 0); // draw each vertex
+
+                gl.End();
+            }
+
+            public List<double[]> V;
+        }
+
+        public class Line : Geom
+        {
+            public Line(double[] start, double[] end)
+            {
+                Start = (double[]) start.Clone();
+                End = (double[]) end.Clone();
+            }
+
+            protected override void OnRender(OpenGL gl)
+            {
+                gl.Begin(OpenGL.GL_LINES);
+                gl.Vertex(Start);
+                gl.Vertex(End);
+                gl.End();
+            }
+
+            public double[] Start;
+            public double[] End;
+        }
+
+        public class PolyLine : Geom
+        {
+            public PolyLine(List<double[]> v, bool close)
+            {
+                V = new List<double[]>(v);
+                Close = close;
+            }
+
+            protected override void OnRender(OpenGL gl)
+            {
+                gl.Begin(Close ? OpenGL.GL_LINE_LOOP : OpenGL.GL_LINE_STRIP);
+                foreach (var p in V)
+                    gl.Vertex(p[0], p[1], 0); // draw each vertex
+                gl.End();
+            }
+
+            public List<double[]> V;
+            public bool Close;
+        }
+
+        public class Compound : Geom
+        {
+            public Compound(Geom[] geoms)
+            {
+                Geoms = geoms;
+            }
+
+            protected override void OnRender(OpenGL gl)
+            {
+                foreach (var geom in Geoms)
+                    geom.Render(gl);
+            }
+
+            private readonly Geom[] Geoms;
+        }
+
+        public static Geom MakeCircle(double radius = 10, int res = 30, bool filled = true)
+        {
+            List<double[]> points = new List<double[]>();
+            for (int i = 0; i < res; ++i)
+            {
+                double ang = 2 * Math.PI * i / res;
+                points.Add(new[] {Math.Cos(ang) * radius, Math.Sin(ang) * radius});
+            }
+
+            if (filled)
+                return new FilledPolygon(points);
+            return new PolyLine(points, true);
+        }
+
+        public static Geom MakePolygon(List<double[]> v, bool filled = true)
+        {
+            if (filled)
+                return new FilledPolygon(v);
+            return new PolyLine(v, true);
+        }
+
+        public static Geom MakePolyLine(List<double[]> v)
+        {
+            return new PolyLine(v, false);
+        }
+
+        public static Geom MakeCapsule(double length, double width)
+        {
+            double l = length, r = width / 2, t = -width / 2, b = 0;
+            var box = MakePolygon(new List<double[]> {new[] {l, b}, new[] {l, t}, new[] {r, t}, new[] {r, b}});
+            var circ0 = MakeCircle(width / 2);
+            var circ1 = MakeCircle(width / 2);
+            circ1.AddAttr(new Transform(new[] {length, 0}));
+            return new Compound(new[] {box, circ0, circ1});
+        }
+
+        //https://github.com/openai/gym/blob/master/gym/envs/classic_control/rendering.py
     }
-
-    public abstract class Geom
-    {
-        public Geom()
-        {
-            Color = Color.Black;
-        }
-
-        public void Render()
-        {
-            //for (var attr in Attrs.reverse)
-            //    attr.Enable();
-            //OnRender();
-            //for (var attr in Attrs.reverse)
-            //    attr.Disable();
-        }
-
-        public abstract void OnRender();
-
-        public void AddAttr(Attr attr)
-        {
-            Attrs.Add(attr);
-        }
-
-        public void SetColor(int r, int g, int b)
-        {
-            Color = Color.FromArgb(r, g, b);
-        }
-
-        private Color Color;
-        private List<Attr> Attrs = new List<Attr>();
-    }
-
-    public abstract class Attr
-    {
-        public abstract void Enable();
-        public virtual void Disable() { }
-    }
-
-    public class Transform : Attr
-    {
-        public Transform(double[] translation = null, double rotation = 0, double[] scale = null)
-        {
-            if (translation != null) SetTranslation(translation[0], translation[1]);
-            SetRotation(rotation);
-            if (scale != null) SetScale(scale[0], scale[1]);
-        }
-        public override void Enable()
-        {
-            //glPushMatrix()
-            //glTranslatef(self.translation[0], self.translation[1], 0) # translate to GL loc ppint
-            //glRotatef(RAD2DEG * self.rotation, 0, 0, 1.0)
-            //glScalef(self.scale[0], self.scale[1], 1)
-        }
-        public override void Disable()
-        {
-            //glPopMatrix()
-        }
-
-        public void SetTranslation(double newX, double newY)
-        {
-            translation[0] = newX;
-            translation[1] = newY;
-        }
-
-        public void SetRotation(double rot)
-        {
-            rotation = rot;
-        }
-        public void SetScale(double newX, double newY)
-        {
-            scale[0] = newX;
-            scale[1] = newY;
-        }
-
-        private double[] translation = new double[2];
-        private double rotation;
-        private double[] scale = new double[2] { 1, 1 };
-    }
-
-    public class Color : Attr
-    {
-        public Color(float[] vec4)
-        {
-            Vec4 = Array.Copy(vec4, Vec4, 4);
-        }
-
-        public override void Enable()
-        {
-            //glColor4f(*self.vec4)
-        }
-
-        private float[] Vec4 = new float[4];
-    }
-
-    //https://github.com/openai/gym/blob/master/gym/envs/classic_control/rendering.py
 }
