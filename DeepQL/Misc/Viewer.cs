@@ -9,6 +9,7 @@ namespace DeepQL.Misc
 {
     public static class Rendering
     {
+        // Implementation based upon https://github.com/openai/gym/blob/master/gym/envs/classic_control/rendering.py
         public class Viewer : Form
         {
             public Viewer(int width, int height)
@@ -26,16 +27,14 @@ namespace DeepQL.Misc
                 OpenGLControl.TabIndex = 0;
                 OpenGLControl.OpenGLDraw += new RenderEventHandler(OpenGLDrawFunc);
                 OpenGLControl.OpenGL.Enable(OpenGL.GL_BLEND);
-                OpenGLControl.OpenGL.Enable(OpenGL.GL_CULL_FACE);
                 OpenGLControl.OpenGL.BlendFunc(OpenGL.GL_SRC_ALPHA, OpenGL.GL_ONE_MINUS_SRC_ALPHA);
-                OpenGLControl.OpenGL.Disable(OpenGL.GL_DEPTH_TEST);
-                OpenGLControl.OpenGL.Disable(OpenGL.GL_SCISSOR_TEST);
-                OpenGLControl.OpenGL.Viewport(0, 0, width, height);
+                OpenGLControl.OpenGL.Viewport(0, 0, Width, Height);
                 Controls.Add(OpenGLControl);
                 ((System.ComponentModel.ISupportInitialize)(OpenGLControl)).EndInit();
 
                 Name = Text = "Viewer";
                 FormBorderStyle = FormBorderStyle.None;
+
 
                 Show();
             }
@@ -68,51 +67,25 @@ namespace DeepQL.Misc
             private void OpenGLDrawFunc(object sender, RenderEventArgs e)
             {
                 OpenGL gl = OpenGLControl.OpenGL;
+                gl.ClearColor(0.4f, 0.45f, 0.5f, 1.0f);
 
-                gl.ClearColor(0.2f, 0.25f, 0.3f, 1.0f);
-                gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT/* | OpenGL.GL_DEPTH_BUFFER_BIT*/);
+                gl.MatrixMode(OpenGL.GL_PROJECTION);
+                gl.LoadIdentity();
+                gl.Ortho(0, Width, 0, Height, - 10, 10);
+                gl.MatrixMode(OpenGL.GL_MODELVIEW);
+                gl.LoadIdentity();
 
-                int[] viewport = new int[4];
-                gl.Ortho(0, Width, 0, Height, -1, 1);
+                gl.Clear(OpenGL.GL_COLOR_BUFFER_BIT | OpenGL.GL_DEPTH_BUFFER_BIT);
 
-                ////  Create the appropriate modelview matrix.
-                //gl.MatrixMode(OpenGL.GL_MODELVIEW);
-                //gl.PushMatrix();
-                //gl.LoadIdentity();
+                Trans.Enable(gl);
+                foreach (var geom in Geoms)
+                    geom.Render(gl);
+                foreach (var geom in OneTimeGeoms)
+                    geom.Render(gl);
+                Trans.Disable(gl);
 
-
-
-                //gl.Translate(0, 0, 0);               // Move Left And Into The Screen
-                //gl.Rotate(rtri, 0.0f, 1.0f, 0.0f);				// Rotate The Pyramid On It's Y Axis
-                gl.Begin(OpenGL.GL_TRIANGLES);                  // Start Drawing The Pyramid
-                gl.Color(1.0f, 0.0f, 0.0f);         // Red
-                gl.Vertex(50, 0);            // Top Of Triangle (Front)
-                gl.Color(0.0f, 1.0f, 0.0f);         // Green
-                gl.Vertex(0, 100);          // Left Of Triangle (Front)
-                gl.Color(0.0f, 0.0f, 1.0f);         // Blue
-                gl.Vertex(100, 100);           // Right Of Triangle (Front)
-                gl.End();						// Done Drawing The Pyramid
-
-
-
-
-                //Trans.Enable(gl);
-                //foreach (var geom in Geoms)
-                //    geom.Render(gl);
-                //foreach (var geom in OneTimeGeoms)
-                //    geom.Render(gl);
-                //Trans.Disable(gl);
-
-                //OneTimeGeoms.Clear();
-
-                //gl.MatrixMode(OpenGL.GL_MODELVIEW);
-                //gl.Disable(OpenGL.GL_DEPTH_TEST);
-
-                rtri += 3.0f;// 0.2f;						// Increase The Rotation Variable For The Triangle 
+                OneTimeGeoms.Clear();
             }
-
-            float rtri = 0;
-
 
             protected override void Dispose(bool disposing)
             {
@@ -177,9 +150,9 @@ namespace DeepQL.Misc
             public override void Enable(OpenGL gl)
             {
                 gl.PushMatrix();
-                gl.Translate(translation[0], translation[1], 0);
-                gl.Rotate(RAD2DEG * rotation, 0, 0, 1.0);
-                gl.Scale(scale[0], scale[1], 1);
+                gl.Translate(Translation[0], Translation[1], 0);
+                gl.Rotate(RAD2DEG * Rotation, 0, 0, 1.0);
+                gl.Scale(Scale[0], Scale[1], 1);
             }
 
             public override void Disable(OpenGL gl)
@@ -189,24 +162,24 @@ namespace DeepQL.Misc
 
             public void SetTranslation(double newX, double newY)
             {
-                translation[0] = newX;
-                translation[1] = newY;
+                Translation[0] = newX;
+                Translation[1] = newY;
             }
 
             public void SetRotation(double rot)
             {
-                rotation = rot;
+                Rotation = rot;
             }
 
             public void SetScale(double newX, double newY)
             {
-                scale[0] = newX;
-                scale[1] = newY;
+                Scale[0] = newX;
+                Scale[1] = newY;
             }
 
-            private double[] translation = new double[2];
-            private double rotation;
-            private double[] scale = new double[2] {1, 1};
+            private double[] Translation = new double[2];
+            private double Rotation;
+            private double[] Scale = new double[2] {1, 1};
 
             private const double RAD2DEG = 57.29577951308232;
         }
@@ -238,27 +211,27 @@ namespace DeepQL.Misc
 
         public class FilledPolygon : Geom
         {
-            public FilledPolygon(List<double[]> v)
+            public FilledPolygon(List<double[]> vertices)
             {
-                V = new List<double[]>(v);
+                Vertices = new List<double[]>(vertices);
             }
 
             protected override void OnRender(OpenGL gl)
             {
-                if (V.Count == 4)
+                if (Vertices.Count == 4)
                     gl.Begin(OpenGL.GL_QUADS);
-                else if (V.Count > 4)
+                else if (Vertices.Count > 4)
                     gl.Begin(OpenGL.GL_POLYGON);
                 else
                     gl.Begin(OpenGL.GL_TRIANGLES);
 
-                foreach (var p in V)
+                foreach (var p in Vertices)
                     gl.Vertex(p[0], p[1], 0); // draw each vertex
 
                 gl.End();
             }
 
-            public List<double[]> V;
+            public List<double[]> Vertices;
         }
 
         public class Line : Geom
@@ -284,21 +257,21 @@ namespace DeepQL.Misc
 
         public class PolyLine : Geom
         {
-            public PolyLine(List<double[]> v, bool close)
+            public PolyLine(List<double[]> vertices, bool close)
             {
-                V = new List<double[]>(v);
+                Vertices = new List<double[]>(vertices);
                 Close = close;
             }
 
             protected override void OnRender(OpenGL gl)
             {
                 gl.Begin(Close ? OpenGL.GL_LINE_LOOP : OpenGL.GL_LINE_STRIP);
-                foreach (var p in V)
+                foreach (var p in Vertices)
                     gl.Vertex(p[0], p[1], 0); // draw each vertex
                 gl.End();
             }
 
-            public List<double[]> V;
+            public List<double[]> Vertices;
             public bool Close;
         }
 
@@ -353,7 +326,5 @@ namespace DeepQL.Misc
             circ1.AddAttr(new Transform(new[] {length, 0}));
             return new Compound(new[] {box, circ0, circ1});
         }
-
-        //https://github.com/openai/gym/blob/master/gym/envs/classic_control/rendering.py
     }
 }

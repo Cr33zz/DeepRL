@@ -18,22 +18,11 @@ namespace Examples
 
             env.Reset();
 
-            Rendering.Viewer v = new Rendering.Viewer(600, 400);
-            //var poly = Rendering.MakePolygon(new List<double[]>() { new[] { -10, -10.0 }, new[] { -10, 10.0 }, new[] { 10, 10.0 }, new[] { 10, -10.0 } });
-            //poly.SetColor(1, 0, 0);
-            //v.AddGeom(poly);
-            var track = new Rendering.Line(new[] { 0, 100.0 }, new[] { 600, 100.0 });
-            track.SetColor(0, 0, 0);
-            v.AddGeom(track);
-
-            //while (!env.Step((int)env.ActionSpace.Sample()[0], out var nextState, out var reward))
-            while (true)
+            while (!env.Step((int)env.ActionSpace.Sample()[0], out var nextState, out var reward))
             {
-                //env.Render();
-                v.ManualRender();
-                Thread.Sleep(30);
+                env.Render();
+                Thread.Sleep(50);
             }
-                
 
             return;
         }
