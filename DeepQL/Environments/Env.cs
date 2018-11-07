@@ -16,7 +16,8 @@ namespace DeepQL.Environments
         public abstract bool Step(Tensor action, out Tensor observation, out double reward);
         public abstract Tensor Reset();
         public abstract byte[] Render(bool toRgbArray = false);
-        public virtual void Seed(int seed = 0) { }
+
+        public virtual void Seed(int seed = 0) { Rng = seed > 0 ? new Random(seed) : new Random(); }
         public virtual void Dispose() { }
 
         public bool Step(int action, out Tensor observation, out double reward)
@@ -28,6 +29,6 @@ namespace DeepQL.Environments
         public readonly Space ObservationSpace;
         public Tensor State { get; protected set; }
         public Tensor LastAction { get; protected set; }
-
+        protected Random Rng = new Random();
     }
 }

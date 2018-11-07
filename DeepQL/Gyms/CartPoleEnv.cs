@@ -107,7 +107,7 @@ namespace DeepQL.Gyms
 
         public override Tensor Reset()
         {
-            State = new Tensor(new Shape(4));
+            State = new Tensor(ObservationSpace.Shape);
             State.FillWithRand(-1, -0.05, 0.05);
             StepsBeyondDone = -1;
             return State.Clone();

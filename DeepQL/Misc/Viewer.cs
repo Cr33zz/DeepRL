@@ -41,14 +41,14 @@ namespace DeepQL.Misc
                 Show();
             }
 
-            //public void SetBounds(int left, int right, int bottom, int top)
-            //{
-            //    double scaleX = (double)Width / (right - left);
-            //    double scaleY = (double)Height / (top - bottom);
+            public void SetBounds(double left, double right, double bottom, double top)
+            {
+                double scaleX = Width / (right - left);
+                double scaleY = Height / (top - bottom);
 
-            //    Trans.SetTranslation(-left * scaleX, -bottom * scaleY);
-            //    Trans.SetScale(scaleX, scaleY);
-            //}
+                Trans.SetTranslation(-left * scaleX, -bottom * scaleY);
+                Trans.SetScale(scaleX, scaleY);
+            }
 
             public void AddGeom(Geom geom)
             {
@@ -70,7 +70,7 @@ namespace DeepQL.Misc
             private void OpenGLDrawFunc(object sender, RenderEventArgs e)
             {
                 OpenGL gl = OpenGLControl.OpenGL;
-                gl.ClearColor(0.4f, 0.45f, 0.5f, 1.0f);
+                gl.ClearColor(1, 1, 1, 1);
 
                 gl.MatrixMode(OpenGL.GL_PROJECTION);
                 gl.LoadIdentity();
@@ -206,6 +206,42 @@ namespace DeepQL.Misc
             public double[] Vec4;
         }
 
+        public class LineStyle : Attr
+        {
+            public LineStyle(ushort style)
+            {
+                Style = style;
+            }
+
+            public override void Enable(OpenGL gl)
+            {
+                gl.Enable(OpenGL.GL_LINE_STIPPLE);
+                gl.LineStipple(1, Style);
+            }
+
+            public override void Disable(OpenGL gl)
+            {
+                gl.Disable(OpenGL.GL_LINE_STIPPLE);
+            }
+
+            public ushort Style;
+        }
+
+        public class LineWidth : Attr
+        {
+            public LineWidth(int stroke)
+            {
+                Stroke = stroke;
+            }
+
+            public override void Enable(OpenGL gl)
+            {
+                gl.LineWidth(Stroke);
+            }
+
+            public int Stroke;
+        }
+    
         public class Point : Geom
         {
             protected override void OnRender(OpenGL gl)
@@ -241,12 +277,34 @@ namespace DeepQL.Misc
             public List<double[]> Vertices;
         }
 
+        public class Image : Geom
+        {
+            public Image(string fname, double width, double height)
+            {
+                Width = width;
+                Height = height;
+                Flip = false;
+            }
+
+            protected override void OnRender(OpenGL gl)
+            {
+                //gl.DrawPixels(Width, Height,  / 2, width, height);
+            }
+
+            private double Width;
+            private double Height;
+            private bool Flip;
+            private float[] PixelsData;
+        }
+
         public class Line : Geom
         {
             public Line(double[] start, double[] end)
             {
                 Start = (double[]) start.Clone();
                 End = (double[]) end.Clone();
+                _LineWidth = new LineWidth(1);
+                AddAttr(_LineWidth);
             }
 
             protected override void OnRender(OpenGL gl)
@@ -260,6 +318,7 @@ namespace DeepQL.Misc
 
             public double[] Start;
             public double[] End;
+            private LineWidth _LineWidth;
         }
 
         public class PolyLine : Geom
@@ -268,6 +327,8 @@ namespace DeepQL.Misc
             {
                 Vertices = new List<double[]>(vertices);
                 Close = close;
+                _LineWidth = new LineWidth(1);
+                AddAttr(_LineWidth);
             }
 
             protected override void OnRender(OpenGL gl)
@@ -278,8 +339,14 @@ namespace DeepQL.Misc
                 gl.End();
             }
 
+            public void SetLineWidth(int x)
+            {
+                _LineWidth.Stroke = x;
+            }
+
             public List<double[]> Vertices;
             public bool Close;
+            private LineWidth _LineWidth;
         }
 
         public class Compound : Geom

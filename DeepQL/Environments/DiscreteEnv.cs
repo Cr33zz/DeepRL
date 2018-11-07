@@ -39,11 +39,6 @@ namespace DeepQL.Environments
             return State.Clone();
         }
 
-        public override void Seed(int seed = 0)
-        {
-            Rng = seed > 0 ? new Random(seed) : new Random();
-        }
-
         protected void SetInitialStateDistribution(int state, double weight)
         {
             InitialStateDistribution[state] = weight;
@@ -93,6 +88,5 @@ namespace DeepQL.Environments
 
         private readonly double[] InitialStateDistribution;
         private readonly List<Transition>[,] TransitionsTable;
-        private Random Rng = new Random();
     }
 }
