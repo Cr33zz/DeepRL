@@ -308,7 +308,7 @@ namespace DeepQL.Gyms
 
         private readonly double[] AVAIL_TORQUE = { -1.0, 0.0, 1.0 };
 
-        private const double TORQUE_NOISE_MAX = 0.0;
+        private double TORQUE_NOISE_MAX = 0.0;
 
         //use dynamics equations from the nips paper or the book
         private string BookOrNips = "book";

@@ -1,17 +1,16 @@
 ﻿using System.Collections.Generic;
-using DeepQL.Q;
 using Neuro.Tensors;
 
-namespace DeepQL.Q
+namespace DeepQL.ValueFunc
 {
-    // This is Q function approximation using neural network accepting state and action as an input and returning single Q value
-    public class QN : QFunc
+    public class DQN : ValueFunctionModel
     {
-        public QN(Shape inputShape, int numberOfActions) : base(inputShape, numberOfActions) {}
+        public DQN(Shape inputShape, int numberOfActions, double learningRate, double discountFactor)
+            : base(inputShape, numberOfActions, learningRate, discountFactor)
+        {}
 
-        public override int GetBestAction(Tensor state)
+        public override double GetOptimalAction(Tensor state)
         {
-            //go through all actions and find the one with max Q value at given state
             throw new System.NotImplementedException();
         }
 

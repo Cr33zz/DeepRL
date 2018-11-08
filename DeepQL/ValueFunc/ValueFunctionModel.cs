@@ -1,16 +1,18 @@
 ﻿using System.Collections.Generic;
 using Neuro.Tensors;
 
-namespace DeepQL.Q
+namespace DeepQL.ValueFunc
 {
-    public abstract class QFunc
+    public abstract class ValueFunctionModel
     {
-        protected QFunc(Shape inputShape, int numberOfActions)
+        protected ValueFunctionModel(Shape inputShape, int numberOfActions, double learningRate, double discountFactor)
         {
+            LearningRate = learningRate;
+            DiscountFactor = discountFactor;
             NumberOfActions = numberOfActions;
         }
 
-        public abstract int GetBestAction(Tensor state);
+        public abstract double GetOptimalAction(Tensor state);
 
         public abstract void OnTransition(Tensor state, int action, double reward, Tensor nextState);
         
@@ -21,6 +23,8 @@ namespace DeepQL.Q
             Train(new List<Transition>() { trans });
         }
 
+        protected readonly double LearningRate;
+        protected readonly double DiscountFactor;
         public readonly int NumberOfActions;
     }
 }

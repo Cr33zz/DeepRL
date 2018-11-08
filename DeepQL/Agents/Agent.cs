@@ -1,17 +1,14 @@
 ﻿using System;
 using DeepQL.Environments;
 using Neuro.Tensors;
-using DeepQL.Q;
 
 namespace DeepQL.Agents
 {
     public abstract class Agent
     {
-        protected Agent(Env env, double learningRate, double discoutFactor, bool verbose = false)
+        protected Agent(Env env, bool verbose = false)
         {
             Env = env;
-            LearningRate = learningRate;
-            DiscountFactor = discoutFactor;
             Epsilon = MaxEpsilon;
             Verbose = verbose;
         }
@@ -34,11 +31,9 @@ namespace DeepQL.Agents
 
         protected abstract void OnStep(Tensor state, int action, double reward, Tensor nextState);
 
-        protected Tensor State;
+        protected Tensor LastObservation;
         protected readonly Env Env;
-        protected readonly double LearningRate;
-        protected readonly double DiscountFactor;
-
+        
         protected double Epsilon; // Exploration probability
         protected double MinEpsilon = 0.01;
         protected double MaxEpsilon = 1.0;

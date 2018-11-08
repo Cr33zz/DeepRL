@@ -1,4 +1,4 @@
-﻿using DeepQL.Q;
+﻿using DeepQL.ValueFunc;
 using Neuro.Tensors;
 using System;
 
@@ -6,7 +6,7 @@ namespace DeepQL.BehaviorPolicies
 {
     public class EpsilonGreedyPolicy : RandomPolicy
     {
-        public EpsilonGreedyPolicy(int numberOfActions, QFunc qFunc, double epsilon)
+        public EpsilonGreedyPolicy(int numberOfActions, ValueFunctionModel qFunc, double epsilon)
             : base(numberOfActions)
         {
             QFunction = qFunc;
@@ -18,10 +18,10 @@ namespace DeepQL.BehaviorPolicies
             if (Rand.NextDouble() < Epsilon)
                 return base.GetNextAction(state);
 
-            return QFunction.GetBestAction(state);
+            return (int)QFunction.GetOptimalAction(state);
         }
 
-        private QFunc QFunction;
+        private ValueFunctionModel QFunction;
         public readonly double Epsilon;
     }
 }

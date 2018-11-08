@@ -27,12 +27,12 @@ namespace DeepQL.Environments
 
         public readonly Space ActionSpace;
         public readonly Space ObservationSpace;
-        public Tensor State { get; protected set; }
         public Tensor LastAction { get; protected set; }
 
         // Observation can different from the internal state
         protected virtual Tensor GetObservation() { return State.Clone(); }
 
+        protected Tensor State;
         protected Random Rng = new Random();
     }
 }

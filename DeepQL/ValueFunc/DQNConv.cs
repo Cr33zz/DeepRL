@@ -4,14 +4,14 @@ using Neuro;
 using Neuro.Layers;
 using Neuro.Tensors;
 
-namespace DeepQL.Q
+namespace DeepQL.ValueFunc
 {
-    public class DQN : QFunc
+    public class DQNConv : ValueFunctionModel
     {
-        public DQN(Shape inputShape, int numberOfActions, double learningRate, double discountFactor, int temporalDataSize = 3)
-            :base(inputShape, numberOfActions)
+        public DQNConv(Shape inputShape, int numberOfActions, double learningRate, double discountFactor, int temporalDataSize = 4)
+            :base(inputShape, numberOfActions, learningRate, discountFactor)
         {
-            Net = new NeuralNetwork("DQN");
+            Net = new NeuralNetwork("DQNConv");
             Net.AddLayer(new Convolution(inputShape, 8, 32, 2, Activation.ELU));
             Net.AddLayer(new Convolution(Net.LastLayer(), 4, 64, 2, Activation.ELU));
             Net.AddLayer(new Convolution(Net.LastLayer(), 4, 128, 2, Activation.ELU));
@@ -30,7 +30,7 @@ namespace DeepQL.Q
             //Memory.Push(new Transition(Tensor.Merge(TemporalData, 2), action, reward, nextState)); merge over depth
         }
 
-        public override int GetBestAction(Tensor state)
+        public override double GetOptimalAction(Tensor state)
         {
             var output = Net.FeedForward(state);
             return output.ArgMax();
