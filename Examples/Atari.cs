@@ -9,12 +9,12 @@ namespace Examples
     {
         static void Main(string[] args)
         {
-            Env env = new AtariEnv("../../../roms/pong.bin");
+            Env env = new AtariEnv("../../../roms/breakout.bin");
 
             while (!env.Step(env.ActionSpace.Sample(), out var nextState, out var reward))
             {
                 env.Render();
-                Thread.Sleep(50);
+                Thread.Sleep(15);
             }
 
             return;
