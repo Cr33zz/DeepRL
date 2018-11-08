@@ -79,6 +79,7 @@
     <Compile Include="BehaviorPolicies\RandomPolicy.cs" />
     <Compile Include="Environments\DiscreteEnv.cs" />
     <Compile Include="Environments\Env.cs" />
+    <Compile Include="Gyms\AcrobotEnv.cs" />
     <Compile Include="Gyms\ContinuousMountainCarEnv.cs" />
     <Compile Include="Gyms\MountainCarEnv.cs" />
     <Compile Include="Gyms\PendulumEnv.cs" />

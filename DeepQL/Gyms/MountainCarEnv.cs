@@ -13,8 +13,9 @@ namespace DeepQL.Gyms
     public class MountainCarEnv : Env
     {
         public MountainCarEnv()
-            : base(new Discrete(3), new Box(new double[] { min_position, -max_speed },
-                                            new double[] { max_position, max_speed }, new Shape(2)))
+            : base(new Discrete(3), 
+                   new Box(new [] { min_position, -max_speed },
+                           new [] { max_position, max_speed }, new Shape(2)))
         {
             Reset();
         }
@@ -36,7 +37,7 @@ namespace DeepQL.Gyms
                 var ys = xs.Select(x => Height(x)).ToList();
                 var xys = xs.Zip(ys, (x, y) => new[] { (x - min_position) * scale, y * scale }).ToList();
 
-                Rendering.PolyLine track = Rendering.MakePolyLine(xys) as Rendering.PolyLine;
+                Rendering.Polyline track = Rendering.MakePolyLine(xys) as Rendering.Polyline;
                 track.SetLineWidth(4);
                 Viewer.AddGeom(track);
 
@@ -80,7 +81,7 @@ namespace DeepQL.Gyms
         public override Tensor Reset()
         {
             State = new Tensor(new[] { Rng.NextDouble(-0.6, -0.4), 0.0}, ObservationSpace.Shape);
-            return State.Clone();
+            return GetObservation();
         }
 
         public override bool Step(Tensor action, out Tensor observation, out double reward)
@@ -100,8 +101,15 @@ namespace DeepQL.Gyms
 
             State = new Tensor(new[] { position, velocity }, ObservationSpace.Shape);
 
-            observation = State.Clone();
+            observation = GetObservation();
             return done;
+        }
+
+        public override void Dispose()
+        {
+            Viewer.Dispose();
+            Viewer = null;
+            base.Dispose();
         }
 
         private double Height(double xs)

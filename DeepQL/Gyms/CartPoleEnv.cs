@@ -49,6 +49,7 @@ namespace DeepQL.Gyms
             : base(new Discrete(2), new Box(new double[] { -X_THRESHOLD * 2, double.MinValue, -THETA_THRESHOLD_RADIANS * 2, double.MinValue },
                                             new double[] { X_THRESHOLD * 2, double.MaxValue, THETA_THRESHOLD_RADIANS * 2, double.MaxValue }, new Shape(4)))
         {
+            Reset();
         }
 
         public override bool Step(Tensor action, out Tensor observation, out double reward)
@@ -101,7 +102,7 @@ namespace DeepQL.Gyms
                 reward = 0.0;
             }
 
-            observation = State.Clone();
+            observation = GetObservation();
             return done;
         }
 
@@ -110,7 +111,7 @@ namespace DeepQL.Gyms
             State = new Tensor(ObservationSpace.Shape);
             State.FillWithRand(-1, -0.05, 0.05);
             StepsBeyondDone = -1;
-            return State.Clone();
+            return GetObservation();
         }
 
         public override byte[] Render(bool toRgbArray = false)
@@ -210,6 +211,6 @@ namespace DeepQL.Gyms
         private Rendering.Transform CartTrans;
         private Rendering.Transform PoleTrans;
 
-        int StepsBeyondDone = -1;
+        private int StepsBeyondDone = -1;
     }
 }

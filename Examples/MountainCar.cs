@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Windows.Forms;
+﻿using System.Threading;
 using DeepQL.Agents;
 using DeepQL.Environments;
 using DeepQL.Gyms;
-using DeepQL.Misc;
-using Neuro.Tensors;
 
 namespace Examples
 {
@@ -16,9 +11,7 @@ namespace Examples
         {
             Env env = new MountainCarEnv();
 
-            env.Reset();
-
-            while (!env.Step((int)env.ActionSpace.Sample()[0], out var nextState, out var reward))
+            while (!env.Step(env.ActionSpace.Sample(), out var nextState, out var reward))
             {
                 env.Render();
                 Thread.Sleep(50);

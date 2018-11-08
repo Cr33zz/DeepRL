@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Neuro.Tensors;
 
 namespace DeepQL.Misc
 {
@@ -93,6 +94,51 @@ namespace DeepQL.Misc
                     gl.ReadPixels(0, 0, Width, Height, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, OutputRrbArray);
             }
 
+            public Geom DrawCircle(double radius = 10.0, int res = 30, bool filled = true, List<Attr> attrs = null)
+            {
+                var geom = MakeCircle(radius, res, filled);
+                AddAttrs(geom, attrs);
+                AddOneTime(geom);
+                return geom;
+            }
+
+            public Geom DrawPolygon(List<double[]> vertices, bool filled = true, List<Attr> attrs = null)
+            {
+                var geom = MakePolygon(vertices, filled);
+                AddAttrs(geom, attrs);
+                AddOneTime(geom);
+                return geom;
+            }
+
+            public Geom DrawPolyline(List<double[]> vertices, List<Attr> attrs = null)
+            {
+                var geom = MakePolyLine(vertices);
+                AddAttrs(geom, attrs);
+                AddOneTime(geom);
+                return geom;
+            }
+
+
+            public Geom DrawLine(double[] start, double[] end, List<Attr> attrs = null)
+            {
+                var geom = new Line(start, end);
+                AddAttrs(geom, attrs);
+                AddOneTime(geom);
+                return geom;
+            }
+
+            //public Tensor GetArray()
+            //{
+            //    float[] r = new Tensor(new Shape(Width, Height));
+            //    OpenGLControl.OpenGL.ReadPixels(0, 0, Width, Height, OpenGL.GL_R, OpenGL.GL_UNSIGNED_BYTE, r.get);
+            //    self.window.flip()
+            //    image_data = pyglet.image.get_buffer_manager().get_color_buffer().get_image_data()
+            //    self.window.flip()
+            //    arr = np.fromstring(image_data.data, dtype = np.uint8, sep = '')
+            //    arr = arr.reshape(self.height, self.width, 4)
+            //    return arr[::-1, :, 0:3]
+            //}
+
             protected override void Dispose(bool disposing)
             {
                 OpenGLControl.Dispose();
@@ -106,12 +152,34 @@ namespace DeepQL.Misc
             private readonly Transform Trans = new Transform();
         }
 
+        public static void AddAttrs(Geom geom, List<Attr> attrs)
+        {
+            if (attrs == null)
+                return;
+
+            foreach (var attr in attrs)
+            {
+                if (attr is Color)
+                {
+                    Color color = attr as Color;
+                    geom.SetColor(color.Vec4[0], color.Vec4[1], color.Vec4[2]);
+                }
+                else if (attr is LineWidth)
+                {
+                    LineWidth lineWidth = attr as LineWidth;
+                    geom.SetLineWidth(lineWidth.Stroke);
+                }
+            }
+        }
+
         public abstract class Geom
         {
             protected Geom()
             {
                 _Color = new Color(new double[] {0, 0, 0, 1});
                 AddAttr(_Color);
+                _LineWidth = new LineWidth(1);
+                AddAttr(_LineWidth);
             }
 
             public void Render(OpenGL gl)
@@ -132,11 +200,17 @@ namespace DeepQL.Misc
 
             public void SetColor(double r, double g, double b)
             {
-                _Color.Vec4 = new double[] {r, g, b, 1};
+                _Color.Vec4 = new [] {r, g, b, 1};
             }
 
-            private Color _Color;
-            private readonly List<Attr> Attrs = new List<Attr>();
+            public void SetLineWidth(int stroke)
+            {
+                _LineWidth.Stroke = stroke;
+            }
+
+            public readonly List<Attr> Attrs = new List<Attr>();
+            protected readonly Color _Color;
+            protected readonly LineWidth _LineWidth;
         }
 
         public abstract class Attr
@@ -283,18 +357,16 @@ namespace DeepQL.Misc
             {
                 Width = width;
                 Height = height;
-                Flip = false;
             }
 
             protected override void OnRender(OpenGL gl)
             {
-                //gl.DrawPixels(Width, Height,  / 2, width, height);
+                //gl.DrawPixels(Width, Height, OpenGL.GL_RGBA, Pixels);
             }
 
             private double Width;
             private double Height;
-            private bool Flip;
-            private float[] PixelsData;
+            //private float[] Pixels;
         }
 
         public class Line : Geom
@@ -303,13 +375,10 @@ namespace DeepQL.Misc
             {
                 Start = (double[]) start.Clone();
                 End = (double[]) end.Clone();
-                _LineWidth = new LineWidth(1);
-                AddAttr(_LineWidth);
             }
 
             protected override void OnRender(OpenGL gl)
             {
-                //gl.LineWidth(2);
                 gl.Begin(OpenGL.GL_LINES);
                 gl.Vertex(Start[0], Start[1], 0);
                 gl.Vertex(End[0], End[1], 0);
@@ -318,17 +387,14 @@ namespace DeepQL.Misc
 
             public double[] Start;
             public double[] End;
-            private LineWidth _LineWidth;
         }
 
-        public class PolyLine : Geom
+        public class Polyline : Geom
         {
-            public PolyLine(List<double[]> vertices, bool close)
+            public Polyline(List<double[]> vertices, bool close)
             {
                 Vertices = new List<double[]>(vertices);
                 Close = close;
-                _LineWidth = new LineWidth(1);
-                AddAttr(_LineWidth);
             }
 
             protected override void OnRender(OpenGL gl)
@@ -339,14 +405,8 @@ namespace DeepQL.Misc
                 gl.End();
             }
 
-            public void SetLineWidth(int x)
-            {
-                _LineWidth.Stroke = x;
-            }
-
             public List<double[]> Vertices;
             public bool Close;
-            private LineWidth _LineWidth;
         }
 
         public class Compound : Geom
@@ -354,6 +414,8 @@ namespace DeepQL.Misc
             public Compound(Geom[] geoms)
             {
                 Geoms = geoms;
+                foreach (var geom in geoms)
+                    geom.Attrs.RemoveAll(attr => attr is Color);
             }
 
             protected override void OnRender(OpenGL gl)
@@ -376,24 +438,24 @@ namespace DeepQL.Misc
 
             if (filled)
                 return new FilledPolygon(points);
-            return new PolyLine(points, true);
+            return new Polyline(points, true);
         }
 
         public static Geom MakePolygon(List<double[]> v, bool filled = true)
         {
             if (filled)
                 return new FilledPolygon(v);
-            return new PolyLine(v, true);
+            return new Polyline(v, true);
         }
 
         public static Geom MakePolyLine(List<double[]> v)
         {
-            return new PolyLine(v, false);
+            return new Polyline(v, false);
         }
 
         public static Geom MakeCapsule(double length, double width)
         {
-            double l = length, r = width / 2, t = -width / 2, b = 0;
+            double l = 0, r = length, t = width / 2, b = -width / 2;
             var box = MakePolygon(new List<double[]> {new[] {l, b}, new[] {l, t}, new[] {r, t}, new[] {r, b}});
             var circ0 = MakeCircle(width / 2);
             var circ1 = MakeCircle(width / 2);

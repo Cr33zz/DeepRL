@@ -113,6 +113,8 @@ namespace DeepQL.Gyms
             }
 
             FinalizeInitialStateDistribution();
+
+            Reset();
         }
 
         public override byte[] Render(bool toRgbArray = false)

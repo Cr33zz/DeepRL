@@ -14,9 +14,10 @@ namespace DeepQL.Gyms
     {
         public PendulumEnv()
             : base(new Box(-max_torque, max_torque, new Shape(1)),
-                   new Box(new double[] { -1, -1 },
-                           new double[] { 1, 1 }, new Shape(2)))
+                   new Box(new [] { -1, -1, -max_speed },
+                           new [] { 1, 1, max_speed }, new Shape(3)))
         {
+            Reset();
         }
 
         public override byte[] Render(bool toRgbArray = false)
@@ -38,20 +39,23 @@ namespace DeepQL.Gyms
                 img.AddAttr(imgtrans);
             }
 
-            //Viewer.AddOneTime(self.img);
+            Viewer.AddOneTime(img);
             pole_transform.SetRotation(State[0] + Math.PI / 2);
-            if (last_u != double.NaN)
+            if (!double.IsNaN(last_u))
                 imgtrans.SetScale(-last_u / 2, Math.Abs(last_u) / 2 );
+
+            Viewer.Render();
 
             return null;
         }
 
         public override Tensor Reset()
         {
-            State = new Tensor(ObservationSpace.Shape);
-            State.FillWithRand(-1, -1, 1);
+            State = new Tensor(new Shape(2));
+            State[0] = Rng.NextDouble(-Math.PI, Math.PI);
+            State[1] = Rng.NextDouble(-1, 1);
             last_u = double.NaN;
-            return State.Clone();
+            return GetObservation();
         }
 
         public override bool Step(Tensor action, out Tensor observation, out double reward)
@@ -71,11 +75,24 @@ namespace DeepQL.Gyms
             double newth = th + newthdot * dt;
             newthdot = Neuro.Tools.Clip(newthdot, -max_speed, max_speed); //pylint: disable=E1111
 
-            State = new Tensor(new[] { newth, newthdot }, ObservationSpace.Shape);
-            observation = State.Clone();
+            State = new Tensor(new[] { newth, newthdot }, State.Shape);
+            observation = GetObservation();
             reward = -costs;
 
             return false;
+        }
+
+        public override void Dispose()
+        {
+            Viewer.Dispose();
+            Viewer = null;
+            base.Dispose();
+        }
+
+        protected override Tensor GetObservation()
+        {
+            double theta = State[0], thetadot = State[1];
+            return new Tensor(new[] { Math.Cos(theta), Math.Sin(theta), thetadot }, ObservationSpace.Shape);
         }
 
         private double AngleNormalize(double x)

@@ -16,8 +16,6 @@ namespace Examples
         {
             Env env = new CartPoleEnv();
 
-            env.Reset();
-
             while (!env.Step((int)env.ActionSpace.Sample()[0], out var nextState, out var reward))
             {
                 env.Render();

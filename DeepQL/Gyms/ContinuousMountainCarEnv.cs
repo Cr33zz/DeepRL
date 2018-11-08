@@ -28,9 +28,10 @@ namespace DeepQL.Gyms
     {
         public ContinuousMountainCarEnv()
             : base(new Box(min_action, max_action, new Shape(1)), 
-                   new Box(new double[] { min_position, -max_speed },
-                           new double[] { max_position, max_speed }, new Shape(2)))
+                   new Box(new [] { min_position, -max_speed },
+                           new [] { max_position, max_speed }, new Shape(2)))
         {
+            Reset();
         }
 
         public override byte[] Render(bool toRgbArray = false)
@@ -50,7 +51,7 @@ namespace DeepQL.Gyms
                 var ys = xs.Select(x => Height(x)).ToList();
                 var xys = xs.Zip(ys, (x, y) => new[] { (x - min_position) * scale, y * scale }).ToList();
 
-                Rendering.PolyLine track = Rendering.MakePolyLine(xys) as Rendering.PolyLine;
+                Rendering.Polyline track = Rendering.MakePolyLine(xys) as Rendering.Polyline;
                 track.SetLineWidth(4);
                 Viewer.AddGeom(track);
 
@@ -120,8 +121,15 @@ namespace DeepQL.Gyms
 
             State = new Tensor(new[] { position, velocity }, ObservationSpace.Shape);
 
-            observation = State.Clone();
+            observation = GetObservation();
             return done;
+        }
+
+        public override void Dispose()
+        {
+            Viewer.Dispose();
+            Viewer = null;
+            base.Dispose();
         }
 
         private double Height(double xs)

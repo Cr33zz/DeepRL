@@ -53,7 +53,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>Examples.MountainCar</StartupObject>
+    <StartupObject>Examples.Pendulum</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DeepQL">
@@ -73,8 +73,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Acrobot.cs" />
     <Compile Include="CartPole.cs" />
+    <Compile Include="ContinuousMountainCar.cs" />
     <Compile Include="MountainCar.cs" />
+    <Compile Include="Pendulum.cs" />
     <Compile Include="Taxi.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
