@@ -33,6 +33,10 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AleControlLib">
+      <HintPath>..\packages\AleControl.0.10.0.75-beta1\lib\net40\AleControlLib.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Cloo">
       <HintPath>.\Cloo.dll</HintPath>
     </Reference>
@@ -80,6 +84,7 @@
     <Compile Include="Environments\DiscreteEnv.cs" />
     <Compile Include="Environments\Env.cs" />
     <Compile Include="Gyms\AcrobotEnv.cs" />
+    <Compile Include="Gyms\AtariEnv.cs" />
     <Compile Include="Gyms\ContinuousMountainCarEnv.cs" />
     <Compile Include="Gyms\MountainCarEnv.cs" />
     <Compile Include="Gyms\PendulumEnv.cs" />
@@ -89,6 +94,7 @@
     <Compile Include="Misc\KinematicIntegrator.cs" />
     <Compile Include="Misc\OutputColorizer.cs" />
     <Compile Include="Misc\RandomExtensions.cs" />
+    <Compile Include="Misc\TensorExtensions.cs" />
     <Compile Include="Misc\Viewer.cs" />
     <Compile Include="Spaces\Box.cs" />
     <Compile Include="Spaces\Discrete.cs" />

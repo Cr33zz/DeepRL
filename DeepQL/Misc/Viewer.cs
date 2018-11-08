@@ -353,20 +353,28 @@ namespace DeepQL.Misc
 
         public class Image : Geom
         {
-            public Image(string fname, double width, double height)
+            public Image(string fname, int width, int height)
             {
                 Width = width;
                 Height = height;
             }
 
-            protected override void OnRender(OpenGL gl)
+            public Image(byte[] pixels, int width, int height)
             {
-                //gl.DrawPixels(Width, Height, OpenGL.GL_RGBA, Pixels);
+                Width = width;
+                Height = height;
+                Pixels = (byte[])pixels.Clone();
             }
 
-            private double Width;
-            private double Height;
-            //private float[] Pixels;
+            protected override void OnRender(OpenGL gl)
+            {
+                // add support foir grayscale Pixels.Length == Width * Height ? OpenGL.GL_gr
+                gl.DrawPixels(Width, Height, OpenGL.GL_RGB, Pixels);
+            }
+
+            private int Width;
+            private int Height;
+            public byte[] Pixels;
         }
 
         public class Line : Geom

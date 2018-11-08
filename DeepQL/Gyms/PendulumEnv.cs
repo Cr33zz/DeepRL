@@ -34,15 +34,16 @@ namespace DeepQL.Gyms
                 var axle = Rendering.MakeCircle(.05);
                 axle.SetColor(0, 0, 0);
                 Viewer.AddGeom(axle);
-                img = new Rendering.Image("assets/clockwise.png", 1.0, 1.0);
-                imgtrans = new Rendering.Transform();
-                img.AddAttr(imgtrans);
+                //img = new Rendering.Image("assets/clockwise.png", 1.0, 1.0);
+                //imgtrans = new Rendering.Transform();
+                //img.AddAttr(imgtrans);
             }
 
-            Viewer.AddOneTime(img);
             pole_transform.SetRotation(State[0] + Math.PI / 2);
-            if (!double.IsNaN(last_u))
-                imgtrans.SetScale(-last_u / 2, Math.Abs(last_u) / 2 );
+
+            //Viewer.AddOneTime(img);
+            //if (!double.IsNaN(last_u))
+            //    imgtrans.SetScale(-last_u / 2, Math.Abs(last_u) / 2 );
 
             Viewer.Render();
 
@@ -101,8 +102,8 @@ namespace DeepQL.Gyms
         }
 
         private Rendering.Viewer Viewer;
-        private Rendering.Image img;
-        private Rendering.Transform imgtrans;
+        //private Rendering.Image img;
+        //private Rendering.Transform imgtrans;
         private Rendering.Transform pole_transform;
         private double last_u = double.NaN;
 

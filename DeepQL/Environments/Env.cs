@@ -25,8 +25,8 @@ namespace DeepQL.Environments
             return Step(new Tensor(new double[] {action}, new Shape(1)), out observation, out reward);
         }
 
-        public readonly Space ActionSpace;
-        public readonly Space ObservationSpace;
+        public Space ActionSpace { get; protected set; }
+        public Space ObservationSpace { get; protected set; }
         public Tensor LastAction { get; protected set; }
 
         // Observation can different from the internal state
