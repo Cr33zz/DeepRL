@@ -116,6 +116,5 @@ namespace DeepQL.Gyms
         private ACTION[] rgActions;
 
         private Rendering.Viewer Viewer;
-        private Rendering.Transform CarTrans;
     }
 }

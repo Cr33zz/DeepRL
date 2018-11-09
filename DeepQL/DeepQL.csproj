@@ -37,6 +37,9 @@
       <HintPath>..\packages\AleControl.0.10.0.75-beta1\lib\net40\AleControlLib.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Box2DNet">
+      <HintPath>.\Box2DNet.dll</HintPath>
+    </Reference>
     <Reference Include="Cloo">
       <HintPath>.\Cloo.dll</HintPath>
     </Reference>
@@ -79,7 +82,6 @@
   <ItemGroup>
     <Compile Include="Agents\Agent.cs" />
     <Compile Include="Agents\AgentQL.cs" />
-    <Compile Include="AleSample.cs" />
     <Compile Include="BehaviorPolicies\BasePolicy.cs" />
     <Compile Include="BehaviorPolicies\EpsilonGreedyPolicy.cs" />
     <Compile Include="BehaviorPolicies\RandomPolicy.cs" />
@@ -87,6 +89,7 @@
     <Compile Include="Environments\Env.cs" />
     <Compile Include="Gyms\AcrobotEnv.cs" />
     <Compile Include="Gyms\AtariEnv.cs" />
+    <Compile Include="Gyms\BipedalWalkerEnv.cs" />
     <Compile Include="Gyms\ContinuousMountainCarEnv.cs" />
     <Compile Include="Gyms\MountainCarEnv.cs" />
     <Compile Include="Gyms\PendulumEnv.cs" />

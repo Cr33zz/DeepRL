@@ -79,7 +79,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Acrobot.cs" />
-    <Compile Include="AleSample.cs" />
     <Compile Include="Atari.cs" />
     <Compile Include="CartPole.cs" />
     <Compile Include="ContinuousMountainCar.cs" />
