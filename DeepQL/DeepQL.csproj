@@ -37,8 +37,8 @@
       <HintPath>..\packages\AleControl.0.10.0.75-beta1\lib\net40\AleControlLib.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Box2DNet">
-      <HintPath>.\Box2DNet.dll</HintPath>
+    <Reference Include="Box2DSharp">
+      <HintPath>.\Box2DSharp.dll</HintPath>
     </Reference>
     <Reference Include="Cloo">
       <HintPath>.\Cloo.dll</HintPath>
