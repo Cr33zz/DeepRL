@@ -53,7 +53,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>Examples.Atari</StartupObject>
+    <StartupObject>Examples.BipedalWalker</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AleControlLib, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f59a5464a77ea1ad, processorArchitecture=MSIL">
@@ -80,6 +80,7 @@
   <ItemGroup>
     <Compile Include="Acrobot.cs" />
     <Compile Include="Atari.cs" />
+    <Compile Include="BipedalWalker.cs" />
     <Compile Include="CartPole.cs" />
     <Compile Include="ContinuousMountainCar.cs" />
     <Compile Include="MountainCar.cs" />

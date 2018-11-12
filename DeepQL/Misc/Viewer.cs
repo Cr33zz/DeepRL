@@ -193,19 +193,22 @@ namespace DeepQL.Misc
 
             protected abstract void OnRender(OpenGL gl);
 
-            public void AddAttr(Attr attr)
+            public Geom AddAttr(Attr attr)
             {
                 Attrs.Add(attr);
+                return this;
             }
 
-            public void SetColor(double r, double g, double b)
+            public Geom SetColor(double r, double g, double b)
             {
                 _Color.Vec4 = new [] {r, g, b, 1};
+                return this;
             }
 
-            public void SetLineWidth(int stroke)
+            public Geom SetLineWidth(int stroke)
             {
                 _LineWidth.Stroke = stroke;
+                return this;
             }
 
             public readonly List<Attr> Attrs = new List<Attr>();
