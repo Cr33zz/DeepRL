@@ -4,6 +4,7 @@ using Neuro.Tensors;
 using System;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
 using DeepQL.Misc;
 using Shape = Neuro.Tensors.Shape;
 
@@ -42,32 +43,38 @@ namespace DeepQL.Gyms
             : base(new Box(new[] { -1.0, -1.0, -1.0, -1.0 }, new[] { 1.0, 1.0, 1.0, 1.0 }, new Shape(4)),
                    new Box(double.NegativeInfinity, double.PositiveInfinity, new Shape(24)))
         {
+            contactDetector = new ContactDetector(this);
             var worldAabb = new b2AABB() { lowerBound = new b2Vec2(-100, -100), upperBound = new b2Vec2(1000, 1000) };
             World = new b2World(new b2Vec2(0, 9.807f));
 
-            HULL_FD.shape = new b2PolygonShape(HULL_POLY.Select(v => new b2Vec2(v[0] / SCALE, v[1] / SCALE)).ToArray());
+            HULL_FD.shape = new b2PolygonShape();
+            (HULL_FD.shape as b2PolygonShape).Set(HULL_POLY.Select(v => new b2Vec2(v[0] / SCALE, v[1] / SCALE)).ToArray());
             HULL_FD.density = 5.0f;
             HULL_FD.friction = 0.1f;
             HULL_FD.filter.categoryBits = 0x0020;
             HULL_FD.filter.maskBits = 0x0001; // collide only with ground
             HULL_FD.restitution = 0; // 0.99 bouncy
 
-            LEG_FD.shape = b2PolygonShape.AsBox(LEG_W / 2, LEG_H / 2);
+            LEG_FD.shape = new b2PolygonShape();
+            (LEG_FD.shape as b2PolygonShape).SetAsBox(LEG_W / 2, LEG_H / 2);
             LEG_FD.density = 1.0f;
             LEG_FD.filter.categoryBits = 0x0020;
             LEG_FD.filter.maskBits = 0x0001;
             LEG_FD.restitution = 0;
 
-            LOWER_FD.shape = b2PolygonShape.AsBox(0.8f * LEG_W / 2, LEG_H / 2);
+            LOWER_FD.shape = new b2PolygonShape();
+            (LOWER_FD.shape as b2PolygonShape).SetAsBox(0.8f * LEG_W / 2, LEG_H / 2);
             LEG_FD.density = 1.0f;
             LEG_FD.filter.categoryBits = 0x0020;
             LEG_FD.filter.maskBits = 0x0001;
             LEG_FD.restitution = 0;
 
-            fd_polygon.shape = b2PolygonShape.AsArray(new b2Vec2[] { new b2Vec2(0, 0), new b2Vec2(1, 0), new b2Vec2(1, -1), new b2Vec2(0, -1) });
+            fd_polygon.shape = new b2PolygonShape();
+            (fd_polygon.shape as b2PolygonShape).Set(new[] { new b2Vec2(0, 0), new b2Vec2(1, 0), new b2Vec2(1, -1), new b2Vec2(0, -1) });
             fd_polygon.friction = FRICTION;
 
-            fd_edge.shape = new b2EdgeShape(new b2Vec2(0, 0), new b2Vec2(1, 1));
+            fd_edge.shape = new b2EdgeShape();
+            (fd_edge.shape as b2EdgeShape).Set(new b2Vec2(0, 0), new b2Vec2(1, 1));
             fd_edge.friction = FRICTION;
             fd_edge.filter.categoryBits = 0x0001;
 
@@ -94,36 +101,33 @@ namespace DeepQL.Gyms
             //    if poly[0][0] > self.scroll + VIEWPORT_W / SCALE: continue
             //    self.viewer.draw_polygon(poly, color = color)
 
-            lidar_render = (lidar_render + 1) % 100;
-            var i = lidar_render;
-            if (i < 2 * lidar.Length)
+            foreach (var l in lidar)
             {
-                var l = i < lidar.Length ? lidar[i] : lidar[lidar.Length - i - 1];
-                //Viewer.DrawPolyline([l.p1, l.p2]).SetColor(1, 0, 0).SetLineWidth(1);
+                Viewer.DrawPolyline(new List<double[]>{ new double[]{l.P1.x, l.P1.y}, new double[] { l.P2.x, l.P2.y} }).SetColor(1, 0, 0).SetLineWidth(1);
             }
 
             foreach (var obj in drawlist)
             {
                 for (b2Fixture f = obj.GetFixtureList(); f != null; f = f.GetNext())
                 {
-                    var xform = f.GetBody().GetTransform().R;
+                    var xform = f.GetBody().GetTransform();
 
                     if (f.GetShape() is b2CircleShape)
                     {
                         var shape = (f.GetShape() as b2CircleShape);
                         var customData = (obj.GetUserData() as CustomBodyData);
-                        var trans = obj.GetPosition() + box2d.Box2D.Common.Math.Mul(xform, shape.GetLocalPosition());
+                        var trans = obj.GetPosition() + GlobalMembers.b2Mul(xform, shape.m_p);
 
                         var t = new Rendering.Transform(new double[] { trans[0], trans[1] });
-                        Viewer.DrawCircle(shape.GetRadius(), 30).SetColor(customData.Color1.x, customData.Color1.y, customData.Color1.z).AddAttr(t);
-                        Viewer.DrawCircle(shape.GetRadius(), 30, false).SetColor(customData.Color2.x, customData.Color2.y, customData.Color2.z).SetLineWidth(2).AddAttr(t);
+                        Viewer.DrawCircle(shape.m_radius, 30).SetColor(customData.Color1.x, customData.Color1.y, customData.Color1.z).AddAttr(t);
+                        Viewer.DrawCircle(shape.m_radius, 30, false).SetColor(customData.Color2.x, customData.Color2.y, customData.Color2.z).SetLineWidth(2).AddAttr(t);
                     }
                     else if (f.GetShape() is b2PolygonShape)
                     {
                         var shape = (f.GetShape() as b2PolygonShape);
                         var customData = (obj.GetUserData() as CustomBodyData);
 
-                        var path = shape.GetVertices().Select(v => { var trans = obj.GetPosition() + Box2DNet.Common.Math.Mul(xform, v); return new double[] { trans[0], trans[1] };}).ToList();
+                        var path = shape.m_vertices.Select(v => { var trans = obj.GetPosition() + GlobalMembers.b2Mul(xform, v); return new double[] { trans[0], trans[1] };}).ToList();
                         Viewer.DrawPolygon(path).SetColor(customData.Color1.x, customData.Color1.y, customData.Color1.z);
                         path.Add(path[0]);
                         Viewer.DrawPolyline(path).SetColor(customData.Color2.x, customData.Color2.y, customData.Color2.z).SetLineWidth(2);
@@ -150,7 +154,7 @@ namespace DeepQL.Gyms
             State = new Tensor(ObservationSpace.Shape);
 
             Destroy();
-            World.SetContactListener(this);
+            World.SetContactListener(contactDetector);
 
             game_over = false;
             prev_shaping = float.NaN;
@@ -167,14 +171,14 @@ namespace DeepQL.Gyms
             var init_y = TERRAIN_HEIGHT + 2 * LEG_H;
             hull = CreateDynamicBody(new b2Vec2(init_x, init_y), 0, HULL_FD);
             hull.SetUserData(new CustomBodyData() { Color1 = new b2Vec3(0.5f, 0.4f, 0.9f), Color2 = new b2Vec3(0.3f, 0.3f, 0.5f) });
-            hull.ApplyForce(new b2Vec2((float)Rng.NextDouble(-INITIAL_RANDOM, INITIAL_RANDOM), 0), hull.GetWorldCenter());
+            hull.ApplyForce(new b2Vec2((float)Rng.NextDouble(-INITIAL_RANDOM, INITIAL_RANDOM), 0), hull.GetWorldCenter(), true);
 
             foreach (var i in new[] {-1, +1})
             {
                 var leg = CreateDynamicBody(new b2Vec2(init_x, init_y - LEG_H / 2 - LEG_DOWN), (i * 0.05f), LEG_FD);
                 leg.SetUserData(new CustomBodyData() { Color1 = new b2Vec3(0.6f - i / 10.0f, 0.3f - i / 10.0f, 0.5f - i / 10.0f),
                                                        Color2 = new b2Vec3(0.4f - i / 10.0f, 0.2f - i / 10.0f, 0.3f - i / 10.0f) });
-                var rjd = new Joints.b2RevoluteJointDef();
+                var rjd = new b2RevoluteJointDef();
                 rjd.bodyA = hull;
                 rjd.bodyB = leg;
                 rjd.localAnchorA = new b2Vec2(0, LEG_DOWN);
@@ -187,12 +191,12 @@ namespace DeepQL.Gyms
                 rjd.upperAngle = 1.1f;
 
                 legs.Add(leg);
-                joints.Add((Joints.b2RevoluteJoint)World.CreateJoint(rjd));
+                joints.Add((b2RevoluteJoint)World.CreateJoint(rjd));
 
                 var lower = CreateDynamicBody(new b2Vec2(init_x, init_y - LEG_H * 3 / 2 - LEG_DOWN), (i * 0.05f), LOWER_FD);
                 lower.SetUserData(new CustomBodyData() { Color1 = new b2Vec3(0.6f - i / 10.0f, 0.3f - i / 10.0f, 0.5f - i / 10.0f),
                                                         Color2 = new b2Vec3(0.4f - i / 10.0f, 0.2f - i / 10.0f, 0.3f - i / 10.0f) });
-                rjd = new Joints.b2RevoluteJointDef();
+                rjd = new b2RevoluteJointDef();
                 rjd.bodyA = leg;
                 rjd.bodyB = lower;
                 rjd.localAnchorA = new b2Vec2(0, -LEG_H / 2);
@@ -205,15 +209,14 @@ namespace DeepQL.Gyms
                 rjd.upperAngle = -0.1f;
                 
                 legs.Add(lower);
-                joints.Add((Joints.b2RevoluteJoint)World.CreateJoint(rjd));
+                joints.Add((b2RevoluteJoint)World.CreateJoint(rjd));
             }
 
             drawlist = terrain.Concat(legs).ToList();
             drawlist.Add(hull);
 
-
             for (int i = 0; i < lidar.Length; ++i)
-                lidar[i] = new LidarData();
+                lidar[i] = new LidarCallback();
 
             Step(new Tensor(new[] {0.0, 0.0, 0.0, 0.0}, ActionSpace.Shape), out var observation, out var reward);
 
@@ -221,20 +224,20 @@ namespace DeepQL.Gyms
 
         }
 
-        class LidarData
+        private class LidarCallback : b2RayCastCallback
         {
             public b2Vec2 P1, P2;
-            public float Fraction;
-        }
+            public double Fraction;
 
-        public static double ReportFixture(b2Fixture fixture, b2Vec2 point, b2Vec2 normal, double fraction)
-        {
-            if (((int)fixture.GetFilterData().categoryBits & 1) == 0)
-                return 1;
+            public override float ReportFixture(b2Fixture fixture, b2Vec2 point, b2Vec2 normal, float fraction)
+            {
+                if ((fixture.GetFilterData().categoryBits & 1) == 0)
+                    return 1;
 
-            lidar[currentLidar].P2 = point;
-            lidar[currentLidar].Fraction = (float)fraction;
-            return 0;
+                P2 = point;
+                Fraction = fraction;
+                return 0;
+            }
         }
 
         public override bool Step(Tensor action, out Tensor observation, out double reward)
@@ -272,11 +275,10 @@ namespace DeepQL.Gyms
                 lidar[i].P2 = new b2Vec2(pos.x + (float)System.Math.Sin(1.5 * i / 10.0) * LIDAR_RANGE,
                                           pos.y - (float)System.Math.Cos(1.5 * i / 10.0) * LIDAR_RANGE);
 
-                currentLidar = i;
-                World.RayCast(ReportFixture, lidar[i].P1, lidar[i].P2);
+                World.RayCast(lidar[i], lidar[i].P1, lidar[i].P2);
             }
 
-            var stateVal = new []
+            var tmp = new []
             {
                 hull.GetAngle(), // Normal angles up to 0.5 here, but sure more is possible.
                 2.0 * hull.GetAngularVelocity() / FPS,
@@ -294,8 +296,8 @@ namespace DeepQL.Gyms
                 (legs[3].GetUserData() as CustomBodyData).GroundContact ? 1.0 : 0.0
             };
 
-            stateVal.Concat(lidar.Select(l => l.Fraction));
-            //assert(state) == 24
+            var stateVal = tmp.Concat(lidar.Select(l => l.Fraction).ToArray()).ToArray();
+            Debug.Assert(stateVal.Length == 24);
             State = new Tensor(stateVal, State.Shape);
 
             scroll = pos.x - (VIEWPORT_W / SCALE / 5);
@@ -376,14 +378,14 @@ namespace DeepQL.Gyms
                         new b2Vec2(x + TERRAIN_STEP, y - 4 * TERRAIN_STEP),
                         new b2Vec2(x, y - 4 * TERRAIN_STEP)
                     };
-                    fd_polygon.shape = b2PolygonShape.AsArray(poly);
+                    (fd_polygon.shape as b2PolygonShape).Set(poly);
                     
                     var t = CreateStaticBody(fd_polygon);
 
                     t.SetUserData(new CustomBodyData() { Color1 = new b2Vec3(1, 1, 1), Color2 = new b2Vec3(0.6f, 0.6f, 0.6f) });
                     terrain.Add(t);
 
-                    fd_polygon.shape = b2PolygonShape.AsArray(poly.Select(p => new b2Vec2(p.x + TERRAIN_STEP * counter, p.y)).ToArray());
+                    (fd_polygon.shape as b2PolygonShape).Set(poly.Select(p => new b2Vec2(p.x + TERRAIN_STEP * counter, p.y)).ToArray());
 
                     t = CreateStaticBody(fd_polygon);
 
@@ -408,7 +410,7 @@ namespace DeepQL.Gyms
                         new b2Vec2(x + counter * TERRAIN_STEP, y + counter * TERRAIN_STEP),
                         new b2Vec2(x, y + counter * TERRAIN_STEP)
                     };
-                    fd_polygon.Vertices = poly;
+                    (fd_polygon.shape as b2PolygonShape).Set(poly);
                     var t = CreateStaticBody(fd_polygon);
                     t.SetUserData(new CustomBodyData() { Color1 = new b2Vec3(1, 1, 1), Color2 = new b2Vec3(0.6f, 0.6f, 0.6f) });
                     terrain.Add(t);
@@ -428,7 +430,7 @@ namespace DeepQL.Gyms
                             new b2Vec2(x + ((1 + s) * stair_width) * TERRAIN_STEP, y + (-1 + s * stair_height) * TERRAIN_STEP),
                             new b2Vec2(x + (s * stair_width) * TERRAIN_STEP, y + (-1 + s * stair_height) * TERRAIN_STEP),
                         };
-                        fd_polygon.Vertices = poly;
+                        (fd_polygon.shape as b2PolygonShape).Set(poly);
                         var t = CreateStaticBody(fd_polygon);
                         t.SetUserData(new CustomBodyData() { Color1 = new b2Vec3(1, 1, 1), Color2 = new b2Vec3(0.6f, 0.6f, 0.6f) });
                         terrain.Add(t);
@@ -469,8 +471,8 @@ namespace DeepQL.Gyms
                     new b2Vec2(terrain_x[i], terrain_y[i]),
                     new b2Vec2(terrain_x[i + 1], terrain_y[i + 1])
                 };
-                fd_edge.Vertex1 = poly[0];
-                fd_edge.Vertex2 = poly[1];
+                (fd_edge.shape as b2EdgeShape).m_vertex1 = poly[0];
+                (fd_edge.shape as b2EdgeShape).m_vertex2 = poly[1];
                 var t = CreateStaticBody(fd_edge);
                 var color = new b2Vec3(0.3f, i % 2 == 0 ? 1.0f : 0.8f, 0.3f);
                 t.SetUserData(new CustomBodyData() { Color1 = color, Color2 = color });
@@ -520,25 +522,8 @@ namespace DeepQL.Gyms
         {
             var body = World.CreateBody(new b2BodyDef());
             body.CreateFixture(b2FixtureDef);
-            body.SetPosition(position);
-            body.SetAngle(angle);
+            body.SetTransform(position, angle);
             return body;
-        }
-
-        public void BeginContact(Contacts.b2Contact contact)
-        {
-            if (hull == contact.GetFixtureA().GetBody() || hull == contact.GetFixtureB().GetBody())
-                game_over = true;
-            foreach (var leg in new[] { legs[1], legs[3] })
-                if (leg == contact.GetFixtureA().GetBody() || leg == contact.GetFixtureB().GetBody())
-                    (leg.GetUserData() as CustomBodyData).GroundContact = true;
-        }
-
-        public void EndContact(Contacts.b2Contact contact)
-        {
-            foreach (var leg in new[] { legs[1], legs[3] })
-                if (leg == contact.GetFixtureA().GetBody() || leg == contact.GetFixtureB().GetBody())
-                    (leg.GetUserData() as CustomBodyData).GroundContact = false;
         }
 
         private const int FPS = 50;
@@ -579,7 +564,7 @@ namespace DeepQL.Gyms
         private List<float> terrain_x = new List<float>();
         private List<float> terrain_y = new List<float>();
         private List<b2Body> legs = new List<b2Body>();
-        private List<Joints.b2RevoluteJoint> joints = new List<Joints.b2RevoluteJoint>();
+        private List<b2RevoluteJoint> joints = new List<b2RevoluteJoint>();
         private b2Body hull;
         private List<Tuple<List<double[]>, b2Vec3>> terrain_poly = new List<Tuple<List<double[]>, b2Vec3>>();
         private List<b2Body> drawlist = new List<b2Body>();
@@ -588,8 +573,35 @@ namespace DeepQL.Gyms
         private float scroll;
         private float prev_shaping;
         private int lidar_render;
-        private static LidarData[] lidar = new LidarData[10];
-        private static int currentLidar;
+        private LidarCallback[] lidar = new LidarCallback[10];
+
+        private class ContactDetector : b2ContactListener
+        {
+            public ContactDetector(BipedalWalkerEnv env)
+            {
+                Env = env;
+            }
+
+            public override void BeginContact(b2Contact contact)
+            {
+                if (Env.hull == contact.GetFixtureA().GetBody() || Env.hull == contact.GetFixtureB().GetBody())
+                    Env.game_over = true;
+                foreach (var leg in new[] { Env.legs[1], Env.legs[3] })
+                    if (leg == contact.GetFixtureA().GetBody() || leg == contact.GetFixtureB().GetBody())
+                        (leg.GetUserData() as CustomBodyData).GroundContact = true;
+            }
+
+            public override void EndContact(b2Contact contact)
+            {
+                foreach (var leg in new[] { Env.legs[1], Env.legs[3] })
+                    if (leg == contact.GetFixtureA().GetBody() || leg == contact.GetFixtureB().GetBody())
+                        (leg.GetUserData() as CustomBodyData).GroundContact = false;
+            }
+
+            private BipedalWalkerEnv Env;
+        }
+
+        private ContactDetector contactDetector;
 
         private class CustomBodyData
         {
