@@ -64,10 +64,10 @@ namespace DeepQL.Gyms
 
             LOWER_FD.shape = new b2PolygonShape();
             (LOWER_FD.shape as b2PolygonShape).SetAsBox(0.8f * LEG_W / 2, LEG_H / 2);
-            LEG_FD.density = 1.0f;
-            LEG_FD.filter.categoryBits = 0x0020;
-            LEG_FD.filter.maskBits = 0x0001;
-            LEG_FD.restitution = 0;
+            LOWER_FD.density = 1.0f;
+            LOWER_FD.filter.categoryBits = 0x0020;
+            LOWER_FD.filter.maskBits = 0x0001;
+            LOWER_FD.restitution = 0;
 
             fd_polygon.shape = new b2PolygonShape();
             (fd_polygon.shape as b2PolygonShape).Set(new[] { new b2Vec2(0, 0), new b2Vec2(1, 0), new b2Vec2(1, -1), new b2Vec2(0, -1) });
@@ -96,14 +96,24 @@ namespace DeepQL.Gyms
             //    if x2 < self.scroll / 2: continue
             //    if x1 > self.scroll / 2 + VIEWPORT_W / SCALE: continue
             //    self.viewer.draw_polygon( [(p[0] + self.scroll / 2, p[1]) for p in poly], color = (1, 1, 1))
-            //        for poly, color in self.terrain_poly:
-            //    if poly[1][0] < self.scroll: continue
-            //    if poly[0][0] > self.scroll + VIEWPORT_W / SCALE: continue
-            //    self.viewer.draw_polygon(poly, color = color)
-
-            foreach (var l in lidar)
+            foreach (var terrain_data in terrain_poly)
             {
-                Viewer.DrawPolyline(new List<double[]>{ new double[]{l.P1.x, l.P1.y}, new double[] { l.P2.x, l.P2.y} }).SetColor(1, 0, 0).SetLineWidth(1);
+                var poly = terrain_data.Item1;
+                var color = terrain_data.Item2;
+
+                if (poly[1][0] < scroll)
+                    continue;
+                if (poly[0][0] > scroll + VIEWPORT_W / SCALE)
+                    continue;
+                Viewer.DrawPolygon(poly).SetColor(color.x, color.y, color.z);
+            }
+
+            lidar_render = (lidar_render + 1) % 100;
+            int i = lidar_render;
+            if (i < 2 * lidar.Length)
+            {
+                var l = i < lidar.Length ? lidar[i] : lidar[2 * lidar.Length - i - 1];
+                Viewer.DrawPolyline(new List<double[]> { new double[] { l.P1.x, l.P1.y }, new double[] { l.P2.x, l.P2.y } }).SetColor(1, 0, 0).SetLineWidth(1);
             }
 
             foreach (var obj in drawlist)
@@ -116,7 +126,7 @@ namespace DeepQL.Gyms
                     {
                         var shape = (f.GetShape() as b2CircleShape);
                         var customData = (obj.GetUserData() as CustomBodyData);
-                        var trans = obj.GetPosition() + GlobalMembers.b2Mul(xform, shape.m_p);
+                        var trans = GlobalMembers.b2Mul(xform, shape.m_p);
 
                         var t = new Rendering.Transform(new double[] { trans[0], trans[1] });
                         Viewer.DrawCircle(shape.m_radius, 30).SetColor(customData.Color1.x, customData.Color1.y, customData.Color1.z).AddAttr(t);
@@ -127,7 +137,7 @@ namespace DeepQL.Gyms
                         var shape = (f.GetShape() as b2PolygonShape);
                         var customData = (obj.GetUserData() as CustomBodyData);
 
-                        var path = shape.m_vertices.Select(v => { var trans = obj.GetPosition() + GlobalMembers.b2Mul(xform, v); return new double[] { trans[0], trans[1] };}).ToList();
+                        var path = shape.m_vertices.Select(v => { var trans = GlobalMembers.b2Mul(xform, v); return new double[] { trans[0], trans[1] };}).ToList();
                         Viewer.DrawPolygon(path).SetColor(customData.Color1.x, customData.Color1.y, customData.Color1.z);
                         path.Add(path[0]);
                         Viewer.DrawPolyline(path).SetColor(customData.Color2.x, customData.Color2.y, customData.Color2.z).SetLineWidth(2);
@@ -173,9 +183,9 @@ namespace DeepQL.Gyms
             hull.SetUserData(new CustomBodyData() { Color1 = new b2Vec3(0.5f, 0.4f, 0.9f), Color2 = new b2Vec3(0.3f, 0.3f, 0.5f) });
             hull.ApplyForce(new b2Vec2((float)Rng.NextDouble(-INITIAL_RANDOM, INITIAL_RANDOM), 0), hull.GetWorldCenter(), true);
 
-            foreach (var i in new[] {-1, +1})
+            foreach (float i in new[] {-1, +1})
             {
-                var leg = CreateDynamicBody(new b2Vec2(init_x, init_y - LEG_H / 2 - LEG_DOWN), (i * 0.05f), LEG_FD);
+                var leg = CreateDynamicBody(new b2Vec2(init_x, init_y - LEG_H / 2 - LEG_DOWN), i * 0.05f, LEG_FD);
                 leg.SetUserData(new CustomBodyData() { Color1 = new b2Vec3(0.6f - i / 10.0f, 0.3f - i / 10.0f, 0.5f - i / 10.0f),
                                                        Color2 = new b2Vec3(0.4f - i / 10.0f, 0.2f - i / 10.0f, 0.3f - i / 10.0f) });
                 var rjd = new b2RevoluteJointDef();
@@ -193,7 +203,7 @@ namespace DeepQL.Gyms
                 legs.Add(leg);
                 joints.Add((b2RevoluteJoint)World.CreateJoint(rjd));
 
-                var lower = CreateDynamicBody(new b2Vec2(init_x, init_y - LEG_H * 3 / 2 - LEG_DOWN), (i * 0.05f), LOWER_FD);
+                var lower = CreateDynamicBody(new b2Vec2(init_x, init_y - LEG_H * 3 / 2 - LEG_DOWN), i * 0.05f, LOWER_FD);
                 lower.SetUserData(new CustomBodyData() { Color1 = new b2Vec3(0.6f - i / 10.0f, 0.3f - i / 10.0f, 0.5f - i / 10.0f),
                                                         Color2 = new b2Vec3(0.4f - i / 10.0f, 0.2f - i / 10.0f, 0.3f - i / 10.0f) });
                 rjd = new b2RevoluteJointDef();
@@ -362,8 +372,7 @@ namespace DeepQL.Gyms
 
                 if (state == GRASS && !oneshot)
                 {
-                    var y_diff = TERRAIN_HEIGHT - y;
-                    velocity = 0.8f * velocity + 0.01f * Neuro.Tools.Sign(y_diff);
+                    velocity = 0.8f * velocity + 0.01f * Neuro.Tools.Sign(TERRAIN_HEIGHT - y);
                     if (i > TERRAIN_STARTPAD)
                         velocity += (float)Rng.NextDouble(-1, 1) / SCALE;   //1
                     y += velocity;
