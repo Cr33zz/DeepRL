@@ -1,24 +1,24 @@
-﻿using DeepQL.ValueFunc;
+﻿using DeepQL.Spaces;
+using DeepQL.ValueFunc;
 using Neuro.Tensors;
-using System;
 
 namespace DeepQL.BehaviorPolicies
 {
     public class EpsilonGreedyPolicy : RandomPolicy
     {
-        public EpsilonGreedyPolicy(int numberOfActions, ValueFunctionModel qFunc, double epsilon)
-            : base(numberOfActions)
+        public EpsilonGreedyPolicy(Space actionSpate, ValueFunctionModel qFunc, double epsilon)
+            : base(actionSpate)
         {
             QFunction = qFunc;
             Epsilon = epsilon;
         }
 
-        public override int GetNextAction(Tensor state)
+        public override Tensor GetNextAction(Tensor state)
         {
             if (Rand.NextDouble() < Epsilon)
                 return base.GetNextAction(state);
 
-            return (int)QFunction.GetOptimalAction(state);
+            return QFunction.GetOptimalAction(state);
         }
 
         private ValueFunctionModel QFunction;

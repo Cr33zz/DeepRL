@@ -6,7 +6,7 @@ using Neuro.Tensors;
 
 namespace DeepQL.ValueFunc
 {
-    public class DQNConv : ValueFunctionModel
+    public class DQNConv : DQN
     {
         public DQNConv(Shape inputShape, int numberOfActions, double learningRate, double discountFactor, int temporalDataSize = 4)
             :base(inputShape, numberOfActions, learningRate, discountFactor)
@@ -19,21 +19,13 @@ namespace DeepQL.ValueFunc
             Net.AddLayer(new Dense(Net.LastLayer(), 512, Activation.ELU));
             Net.AddLayer(new Dense(Net.LastLayer(), numberOfActions, Activation.Softmax));
 
-            Memory = new ReplayMemory(100);
-
             TemporalDataSize = temporalDataSize;
         }
 
-        public override void OnTransition(Tensor state, int action, double reward, Tensor nextState)
+        public override void OnTransition(Tensor state, Tensor action, double reward, Tensor nextState, bool done)
         {
             UpdateTemporalData(state);
-            //Memory.Push(new Transition(Tensor.Merge(TemporalData, 2), action, reward, nextState)); merge over depth
-        }
-
-        public override double GetOptimalAction(Tensor state)
-        {
-            var output = Net.FeedForward(state);
-            return output.ArgMax();
+            //Memory.Push(new Transition(Tensor.Merge(TemporalData, 4), action, reward, nextState, done));
         }
 
         protected override void Train(List<Transition> transitions)
@@ -58,6 +50,5 @@ namespace DeepQL.ValueFunc
         private int TemporalDataSize;
         private List<Tensor> TemporalData = new List<Tensor>();
         private NeuralNetwork Net;
-        private ReplayMemory Memory;
     }
 }

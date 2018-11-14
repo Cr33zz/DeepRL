@@ -12,21 +12,24 @@ namespace DeepQL.ValueFunc
             Table = new double[numberOfStates, numberOfActions];
         }
 
-        public override double GetOptimalAction(Tensor state)
+        public override Tensor GetOptimalAction(Tensor state)
         {
-            return BestActionBasedOnQTable((int)state[0]);
+            var action = new Tensor(new Shape(1));
+            action[0] = BestActionBasedOnQTable((int)state[0]);
+            return action;
         }
 
-        public override void OnTransition(Tensor state, int action, double reward, Tensor nextState)
+        public override void OnTransition(Tensor state, Tensor action, double reward, Tensor nextState, bool done)
         {
             int stateInt = (int)state[0];
-            Table[stateInt, action] += LearningRate * (reward + DiscountFactor * GetMaxRewardBasedOnQTable((int)nextState[0]) - Table[stateInt, action]);
+            int actionInt = (int)action[0];
+            Table[stateInt, actionInt] += LearningRate * (reward + DiscountFactor * GetMaxRewardBasedOnQTable((int)nextState[0]) - Table[stateInt, actionInt]);
         }
 
         protected override void Train(List<Transition> transitions)
         {
             foreach (var trans in transitions)
-                OnTransition(trans.State, trans.Action, trans.Reward, trans.NextState);
+                OnTransition(trans.State, trans.Action, trans.Reward, trans.NextState, trans.Done);
         }
 
         private int BestActionBasedOnQTable(int state)

@@ -1,15 +1,16 @@
-﻿using Neuro.Tensors;
+﻿using DeepQL.Spaces;
+using Neuro.Tensors;
 using System;
 
 namespace DeepQL.BehaviorPolicies
 {
     public class RandomPolicy : BasePolicy
     {
-        public RandomPolicy(int numberOfActions) : base(numberOfActions) { }
+        public RandomPolicy(Space actionSpate) : base(actionSpate) { }
 
-        public override int GetNextAction(Tensor state)
+        public override Tensor GetNextAction(Tensor state)
         {
-            return Rand.Next(0, NumberOfActions);
+            return ActionSpace.Sample();
         }
 
         protected Random Rand = new Random();

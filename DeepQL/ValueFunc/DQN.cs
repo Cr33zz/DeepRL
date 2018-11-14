@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using Neuro;
+using Neuro.Layers;
+using Neuro.Optimizers;
 using Neuro.Tensors;
 
 namespace DeepQL.ValueFunc
@@ -7,21 +10,47 @@ namespace DeepQL.ValueFunc
     {
         public DQN(Shape inputShape, int numberOfActions, double learningRate, double discountFactor)
             : base(inputShape, numberOfActions, learningRate, discountFactor)
-        {}
-
-        public override double GetOptimalAction(Tensor state)
         {
-            throw new System.NotImplementedException();
+            Model.AddLayer(new Flatten(inputShape));
+            Model.AddLayer(new Dense(Model.LastLayer(), 24, Activation.ReLU));
+            Model.AddLayer(new Dense(Model.LastLayer(), 24, Activation.ReLU));
+            Model.AddLayer(new Dense(Model.LastLayer(), numberOfActions, Activation.Linear));
+            Model.Optimize(new Adam(learningRate), Loss.MeanSquareError);
         }
 
-        public override void OnTransition(Tensor state, int action, double reward, Tensor nextState)
+        public override Tensor GetOptimalAction(Tensor state)
         {
-            throw new System.NotImplementedException();
+            var qValues = Model.FeedForward(state);
+            var action = new Tensor(new Shape(1));
+            action[0] = qValues.ArgMax();
+            return action;
+        }
+
+        public override void OnTransition(Tensor state, Tensor action, double reward, Tensor nextState, bool done)
+        {
+            ReplayMem.Push(new Transition(state, action, reward, nextState, done));
+
+            foreach (var trans in ReplayMem.Sample(BatchSize))
+            {
+                // calculate new predicted reward
+                var target = trans.Reward;
+                if (!trans.Done)
+                    target = trans.Reward + DiscountFactor * Model.FeedForward(trans.NextState).Max();
+
+                var target_f = Model.FeedForward(trans.State); // this is our original prediction
+                target_f[(int)trans.Action[0]] = target; // this is the expected prediction for selected action
+
+                //Model.Fit(trans.State, target_f, 1, 1, false, Track.TrainError);
+            }
         }
 
         protected override void Train(List<Transition> transitions)
         {
             throw new System.NotImplementedException();
         }
+
+        private NeuralNetwork Model = new NeuralNetwork("DQN_agent");
+        private ReplayMemory ReplayMem = new ReplayMemory(1000);
+        private int BatchSize = 32;
     }
 }

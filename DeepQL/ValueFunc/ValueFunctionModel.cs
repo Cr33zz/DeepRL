@@ -12,9 +12,9 @@ namespace DeepQL.ValueFunc
             NumberOfActions = numberOfActions;
         }
 
-        public abstract double GetOptimalAction(Tensor state);
+        public abstract Tensor GetOptimalAction(Tensor state);
 
-        public abstract void OnTransition(Tensor state, int action, double reward, Tensor nextState);
+        public abstract void OnTransition(Tensor state, Tensor action, double reward, Tensor nextState, bool done);
         
         protected abstract void Train(List<Transition> transitions);
 

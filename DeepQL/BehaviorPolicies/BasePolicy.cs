@@ -1,16 +1,17 @@
-﻿using Neuro.Tensors;
+﻿using DeepQL.Spaces;
+using Neuro.Tensors;
 
 namespace DeepQL.BehaviorPolicies
 {
     public abstract class BasePolicy
     {
-        public BasePolicy(int numberOfActions)
+        public BasePolicy(Space actionSpate)
         {
-            NumberOfActions = numberOfActions;
+            ActionSpace = actionSpate;
         }
 
-        public abstract int GetNextAction(Tensor state);
+        public abstract Tensor GetNextAction(Tensor state);
 
-        public readonly int NumberOfActions;
+        public readonly Space ActionSpace;
     }
 }

@@ -29,16 +29,16 @@ namespace DeepQL.Agents
 
                 for (int step = 0; step < maxStepsPerEpisode; ++step)
                 {
-                    int action = -1;
+                    Tensor action;
 
                     if (GlobalRandom.Rng.NextDouble() < Epsilon)
-                        action = (int)Env.ActionSpace.Sample()[0]; // explore
+                        action = Env.ActionSpace.Sample(); // explore
                     else
-                        action = (int)ValueFuncModel.GetOptimalAction(LastObservation); // exploit
+                        action = ValueFuncModel.GetOptimalAction(LastObservation); // exploit
 
                     bool done = Env.Step(action, out var observation, out var reward);
 
-                    ValueFuncModel.OnTransition(LastObservation, action, reward, observation);
+                    ValueFuncModel.OnTransition(LastObservation, action, reward, observation, done);
 
                     LastObservation = observation;
 
@@ -61,7 +61,7 @@ namespace DeepQL.Agents
 
                 for (int step = 0; step < maxStepsPerEpisode; ++step)
                 {
-                    int action = (int)ValueFuncModel.GetOptimalAction(LastObservation);
+                    Tensor action = ValueFuncModel.GetOptimalAction(LastObservation);
 
                     bool done = Env.Step(action, out var observation, out var reward);
 
