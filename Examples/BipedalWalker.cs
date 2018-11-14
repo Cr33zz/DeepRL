@@ -10,10 +10,9 @@ namespace Examples
         static void Main(string[] args)
         {
             Env env = new BipedalWalkerEnv();
-            //env.Step(env.ActionSpace.Sample(), out var nextState, out var reward);
-
+            //Env env = new BipedalWalkerHardcoreEnv();
+            
             while (!env.Step(env.ActionSpace.Sample(), out var nextState, out var reward))
-            //while (true)
             {
                 env.Render();
                 Thread.Sleep(15);

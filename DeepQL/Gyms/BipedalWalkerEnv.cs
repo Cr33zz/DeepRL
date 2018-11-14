@@ -40,9 +40,15 @@ namespace DeepQL.Gyms
     public class BipedalWalkerEnv : Env
     {
         public BipedalWalkerEnv()
+            : this(false)
+        {
+        }
+
+        protected BipedalWalkerEnv(bool hardcore)
             : base(new Box(new[] { -1.0, -1.0, -1.0, -1.0 }, new[] { 1.0, 1.0, 1.0, 1.0 }, new Shape(4)),
                    new Box(double.NegativeInfinity, double.PositiveInfinity, new Shape(24)))
         {
+            this.hardcore = hardcore;
             contactDetector = new ContactDetector(this);
             var worldAabb = new b2AABB() { lowerBound = new b2Vec2(-100, -100), upperBound = new b2Vec2(1000, 1000) };
             World = new b2World(new b2Vec2(0, -9.807f));
@@ -180,7 +186,7 @@ namespace DeepQL.Gyms
             var H = VIEWPORT_H / SCALE;
 
             GenerateTerrain(hardcore);
-            //GenerateClouds();
+            GenerateClouds();
 
             var init_x = TERRAIN_STEP * TERRAIN_STARTPAD / 2;
             var init_y = TERRAIN_HEIGHT + 2.1f * LEG_H;
@@ -271,11 +277,11 @@ namespace DeepQL.Gyms
                 joints[0].SetMotorSpeed((SPEED_HIP * Neuro.Tools.Sign(action[0])));
                 joints[0].SetMaxMotorTorque((float)(MOTORS_TORQUE * Neuro.Tools.Clip(System.Math.Abs(action[0]), 0, 1)));
                 joints[1].SetMotorSpeed(SPEED_KNEE * Neuro.Tools.Sign(action[1]));
-                joints[1].SetMotorSpeed((float)(MOTORS_TORQUE * Neuro.Tools.Clip(System.Math.Abs(action[1]), 0, 1)));
+                joints[1].SetMaxMotorTorque((float)(MOTORS_TORQUE * Neuro.Tools.Clip(System.Math.Abs(action[1]), 0, 1)));
                 joints[2].SetMotorSpeed(SPEED_HIP * Neuro.Tools.Sign(action[2]));
-                joints[2].SetMotorSpeed((float)(MOTORS_TORQUE * Neuro.Tools.Clip(System.Math.Abs(action[2]), 0, 1)));
+                joints[2].SetMaxMotorTorque((float)(MOTORS_TORQUE * Neuro.Tools.Clip(System.Math.Abs(action[2]), 0, 1)));
                 joints[3].SetMotorSpeed(SPEED_KNEE * Neuro.Tools.Sign(action[3]));
-                joints[3].SetMotorSpeed((float)(MOTORS_TORQUE * Neuro.Tools.Clip(System.Math.Abs(action[3]), 0, 1)));
+                joints[3].SetMaxMotorTorque((float)(MOTORS_TORQUE * Neuro.Tools.Clip(System.Math.Abs(action[3]), 0, 1)));
             }
 
             World.Step(1.0f / FPS, 6 * 30, 2 * 30);
@@ -361,6 +367,7 @@ namespace DeepQL.Gyms
             float y = TERRAIN_HEIGHT;
             int counter = TERRAIN_STARTPAD;
             bool oneshot = false;
+            terrain_poly.Clear();
             terrain.Clear();
             terrain_x.Clear();
             terrain_y.Clear();
@@ -505,6 +512,23 @@ namespace DeepQL.Gyms
             terrain.Reverse();
         }
 
+        private void GenerateClouds()
+        {
+            // Sorry for the clouds, couldn't resist
+            cloud_poly.Clear();
+            for (int i = 0; i < TERRAIN_LENGTH; ++i)
+            {
+                var x = Rng.NextDouble(0, TERRAIN_LENGTH) * TERRAIN_STEP;
+                var y = VIEWPORT_H / SCALE * 3 / 4;
+                var poly = Enumerable.Range(0, 5).Select(a => new double[] { x + 15 * TERRAIN_STEP * Math.Sin(3.14 * 2 * a / 5) + Rng.NextDouble(0, 5 * TERRAIN_STEP),
+                                                                             y + 5 * TERRAIN_STEP * Math.Cos(3.14 * 2 * a / 5) + Rng.NextDouble(0, 5 * TERRAIN_STEP) }).ToList();
+
+                var x1 = (float)poly.Select(p => p[0]).Min();
+                var x2 = (float)poly.Select(p => p[0]).Max();
+                cloud_poly.Add(new Tuple<List<double[]>, b2Vec2>(poly, new b2Vec2(x1, x2)));
+            }
+        }
+
         private void Destroy()
         {
             foreach (var t in terrain)
@@ -566,7 +590,7 @@ namespace DeepQL.Gyms
         private List<Tuple<List<double[]>, b2Vec3>> terrain_poly = new List<Tuple<List<double[]>, b2Vec3>>();
         private List<Tuple<List<double[]>, b2Vec2>> cloud_poly = new List<Tuple<List<double[]>, b2Vec2>>();
         private List<b2Body> drawlist = new List<b2Body>();
-        private bool hardcore = false;
+        protected bool hardcore = false;
         private bool game_over;
         private float scroll;
         private float prev_shaping;
@@ -606,6 +630,14 @@ namespace DeepQL.Gyms
             public b2Vec3 Color1;
             public b2Vec3 Color2;
             public bool GroundContact;
+        }
+    }
+
+    public class BipedalWalkerHardcoreEnv : BipedalWalkerEnv
+    {
+        public BipedalWalkerHardcoreEnv()
+            : base(true)
+        {
         }
     }
 }
