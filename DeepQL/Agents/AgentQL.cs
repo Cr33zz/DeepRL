@@ -7,8 +7,8 @@ namespace DeepQL.Agents
 {
     public class AgentQL : Agent
     {
-        public AgentQL(Env env, ValueFunctionModel valueFuncModel, bool verbose = false)
-            : base(env, verbose)
+        public AgentQL(string name, Env env, ValueFunctionModel valueFuncModel, bool verbose = false)
+            : base(name, env, verbose)
         {
             ValueFuncModel = valueFuncModel;
         }
@@ -23,15 +23,16 @@ namespace DeepQL.Agents
             ValueFuncModel.OnTransition(LastObservation, action, reward, observation, done);
         }
 
-        protected override void Save()
+        public override void Save(string filename)
         {
-            throw new NotImplementedException();
+            ValueFuncModel.SaveState(filename);
         }
 
-        protected override void Load(int episode)
+        public override void Load(string filename)
         {
-            throw new NotImplementedException();
+            ValueFuncModel.LoadState(filename);
         }
+
         private readonly ValueFunctionModel ValueFuncModel;
     }
 }

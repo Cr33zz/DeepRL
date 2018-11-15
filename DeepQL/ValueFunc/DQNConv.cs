@@ -11,13 +11,13 @@ namespace DeepQL.ValueFunc
         public DQNConv(Shape inputShape, int numberOfActions, double learningRate, double discountFactor, int temporalDataSize = 4)
             :base(inputShape, numberOfActions, learningRate, discountFactor)
         {
-            Net = new NeuralNetwork("DQNConv");
-            Net.AddLayer(new Convolution(inputShape, 8, 32, 2, Activation.ELU));
-            Net.AddLayer(new Convolution(Net.LastLayer(), 4, 64, 2, Activation.ELU));
-            Net.AddLayer(new Convolution(Net.LastLayer(), 4, 128, 2, Activation.ELU));
-            Net.AddLayer(new Flatten(Net.LastLayer()));
-            Net.AddLayer(new Dense(Net.LastLayer(), 512, Activation.ELU));
-            Net.AddLayer(new Dense(Net.LastLayer(), numberOfActions, Activation.Softmax));
+            Model = new NeuralNetwork("DQNConv");
+            Model.AddLayer(new Convolution(inputShape, 8, 32, 2, Activation.ELU));
+            Model.AddLayer(new Convolution(Model.LastLayer(), 4, 64, 2, Activation.ELU));
+            Model.AddLayer(new Convolution(Model.LastLayer(), 4, 128, 2, Activation.ELU));
+            Model.AddLayer(new Flatten(Model.LastLayer()));
+            Model.AddLayer(new Dense(Model.LastLayer(), 512, Activation.ELU));
+            Model.AddLayer(new Dense(Model.LastLayer(), numberOfActions, Activation.Softmax));
 
             TemporalDataSize = temporalDataSize;
         }
@@ -49,6 +49,5 @@ namespace DeepQL.ValueFunc
 
         private int TemporalDataSize;
         private List<Tensor> TemporalData = new List<Tensor>();
-        private NeuralNetwork Net;
     }
 }

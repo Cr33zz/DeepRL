@@ -11,6 +11,7 @@ namespace DeepQL.ValueFunc
         public DQN(Shape inputShape, int numberOfActions, double learningRate, double discountFactor, int replaySize = 2000, int batchSize = 32)
             : base(inputShape, numberOfActions, learningRate, discountFactor)
         {
+            Model = new NeuralNetwork("DQN_agent");
             Model.AddLayer(new Flatten(inputShape));
             Model.AddLayer(new Dense(Model.LastLayer(), 24, Activation.ReLU));
             Model.AddLayer(new Dense(Model.LastLayer(), 24, Activation.ReLU));
@@ -37,6 +38,16 @@ namespace DeepQL.ValueFunc
                 Train(ReplayMem.Sample(BatchSize));
         }
 
+        public override void SaveState(string filename)
+        {
+            Model.SaveStateXml(filename);
+        }
+
+        public override void LoadState(string filename)
+        {
+            Model.LoadStateXml(filename);
+        }
+
         protected override void Train(List<Transition> transitions)
         {
             foreach (var trans in transitions)
@@ -53,7 +64,7 @@ namespace DeepQL.ValueFunc
             }
         }
 
-        private NeuralNetwork Model = new NeuralNetwork("DQN_agent");
+        protected NeuralNetwork Model;
         private ReplayMemory ReplayMem;
         private int BatchSize;
     }

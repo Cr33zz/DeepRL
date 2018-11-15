@@ -8,8 +8,9 @@ namespace DeepQL.Agents
 {
     public abstract class Agent
     {
-        protected Agent(Env env, bool verbose = false)
+        protected Agent(string name, Env env, bool verbose = false)
         {
+            Name = name;
             Env = env;
             Epsilon = MaxEpsilon;
             Verbose = verbose;
@@ -46,6 +47,9 @@ namespace DeepQL.Agents
                 }
 
                 OnEpisodeEnd(ep);
+
+                if (SaveFrequency > 0 && ep % SaveFrequency == 0)
+                    Save($"{Name}_{ep}");
 
                 if (Verbose)
                     Console.WriteLine($"Ep {ep}: reward {Math.Round(totalReward, 2)} epsilon {Math.Round(Epsilon, 4)}");
@@ -87,11 +91,12 @@ namespace DeepQL.Agents
             return totalRewards.Sum() / episodes;
         }
 
+        public virtual void Save(string filename) { }
+        public virtual void Load(string filename) { }
+
         protected abstract Tensor GetOptimalAction();
         protected abstract void OnStep(int step, Tensor action, double reward, Tensor nextState, bool done);
-        protected virtual void OnEpisodeEnd(int episode) { }
-        protected virtual void Save() { }
-        protected virtual void Load(int episode) { }
+        protected virtual void OnEpisodeEnd(int episode) { }        
 
         protected void Render(bool render)
         {
@@ -114,5 +119,6 @@ namespace DeepQL.Agents
         public int StepsPerSec = 30;
 
         public int SaveFrequency = 50; // save parameters every SaveFrequency episodes
+        private readonly string Name;
     }
 }

@@ -15,7 +15,9 @@ namespace DeepQL.ValueFunc
         public abstract Tensor GetOptimalAction(Tensor state);
 
         public abstract void OnTransition(Tensor state, Tensor action, double reward, Tensor nextState, bool done);
-        
+        public virtual void SaveState(string filename) { }
+        public virtual void LoadState(string filename) { }
+
         protected abstract void Train(List<Transition> transitions);
 
         protected void Train(Transition trans)

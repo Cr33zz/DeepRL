@@ -12,7 +12,7 @@ namespace Examples
         {
             Env env = new CartPoleEnv();
 
-            Agent agent = new AgentQL(env, new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), 0.002, 0.8), true);
+            Agent agent = new AgentQL("dqn_cartpole", env, new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), 0.002, 0.8), true);
             agent.Train(500, 300, false);
             Console.WriteLine($"Average reward {agent.Test(10, 300, true)}");
 
