@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Windows.Forms;
 using DeepQL.Agents;
 using DeepQL.Environments;
 using DeepQL.Gyms;
-using DeepQL.Misc;
-using Neuro.Tensors;
+using DeepQL.ValueFunc;
 
 namespace Examples
 {
@@ -16,11 +12,15 @@ namespace Examples
         {
             Env env = new CartPoleEnv();
 
-            while (!env.Step((int)env.ActionSpace.Sample()[0], out var nextState, out var reward))
-            {
-                env.Render();
-                Thread.Sleep(50);
-            }
+            Agent agent = new AgentQL(env, new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), 0.002, 0.8), true);
+            agent.Train(500, 300, false);
+            Console.WriteLine($"Average reward {agent.Test(100, 300, true)}");
+
+            //while (!env.Step((int)env.ActionSpace.Sample()[0], out var nextState, out var reward))
+            //{
+            //    env.Render();
+            //    Thread.Sleep(50);
+            //}
 
             return;
         }

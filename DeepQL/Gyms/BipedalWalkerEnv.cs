@@ -182,9 +182,6 @@ namespace DeepQL.Gyms
             scroll = 0.0f;
             lidar_render = 0;
 
-            var W = VIEWPORT_W / SCALE;
-            var H = VIEWPORT_H / SCALE;
-
             GenerateTerrain(hardcore);
             GenerateClouds();
 
