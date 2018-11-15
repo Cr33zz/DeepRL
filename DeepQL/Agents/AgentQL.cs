@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using DeepQL.Environments;
 using DeepQL.ValueFunc;
@@ -12,20 +11,16 @@ namespace DeepQL.Agents
         public AgentQL(Env env, ValueFunctionModel valueFuncModel, bool verbose = false)
             : base(env, verbose)
         {
-            if (env.ActionSpace.Shape.Length > 1)
-                throw new Exception("Action space can contain only single value.");
-
-            if (env.ObservationSpace.Shape.Length > 1)
-                throw new Exception("Observation space can contain only single value.");
-
             ValueFuncModel = valueFuncModel;
         }
 
-        public override void Train(int episodes, int maxStepsPerEpisode)
+        public override void Train(int episodes, int maxStepsPerEpisode, bool render)
         {
             for (int ep = 0; ep < episodes; ++ep)
             {
                 LastObservation = Env.Reset();
+
+                double totalReward = 0;
 
                 for (int step = 0; step < maxStepsPerEpisode; ++step)
                 {
@@ -37,6 +32,9 @@ namespace DeepQL.Agents
                         action = ValueFuncModel.GetOptimalAction(LastObservation); // exploit
 
                     bool done = Env.Step(action, out var observation, out var reward);
+                    totalReward += reward;
+
+                    Render(render);
 
                     ValueFuncModel.OnTransition(LastObservation, action, reward, observation, done);
 
@@ -46,11 +44,14 @@ namespace DeepQL.Agents
                         break;
                 }
 
-                Epsilon = MinEpsilon + (MaxEpsilon - MinEpsilon) * Math.Exp(EpsilonDecay * ep);
+                if (Verbose)
+                    Console.WriteLine($"Ep {ep}: reward {Math.Round(totalReward, 2)} epsilon {Math.Round(Epsilon, 4)}");
+
+                Epsilon = Math.Max(MinEpsilon, Epsilon * EpsilonDecay);
             }
         }
 
-        public override double Test(int episodes, int maxStepsPerEpisode)
+        public override double Test(int episodes, int maxStepsPerEpisode, bool render)
         {
             double[] totalRewards = new double[episodes];
 
@@ -68,8 +69,7 @@ namespace DeepQL.Agents
                     LastObservation = observation;
                     totalReward += reward;
 
-                    if (Verbose)
-                        Env.Render();
+                    Render(render);
 
                     if (done)
                         break;

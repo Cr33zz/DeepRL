@@ -20,7 +20,7 @@ namespace DeepQL.ValueFunc
 
         public override Tensor GetOptimalAction(Tensor state)
         {
-            var qValues = Model.FeedForward(state);
+            var qValues = Model.Predict(state);
             var action = new Tensor(new Shape(1));
             action[0] = qValues.ArgMax();
             return action;
@@ -35,12 +35,12 @@ namespace DeepQL.ValueFunc
                 // calculate new predicted reward
                 var target = trans.Reward;
                 if (!trans.Done)
-                    target = trans.Reward + DiscountFactor * Model.FeedForward(trans.NextState).Max();
+                    target = trans.Reward + DiscountFactor * Model.Predict(trans.NextState).Max();
 
-                var target_f = Model.FeedForward(trans.State); // this is our original prediction
+                var target_f = Model.Predict(trans.State); // this is our original prediction
                 target_f[(int)trans.Action[0]] = target; // this is the expected prediction for selected action
 
-                //Model.Fit(trans.State, target_f, 1, 1, false, Track.TrainError);
+                Model.Fit(trans.State, target_f, 1, 0, Track.Nothing);
             }
         }
 
