@@ -28,7 +28,10 @@ namespace DeepQL
 
         public List<Transition> Sample(int batchSize)
         {
-            return new List<Transition>();
+            var sample = new List<Transition>();
+            for (int i = 0; i < batchSize; ++i)
+                sample.Add(Memory[GlobalRandom.Rng.Next(StorageSize)]);
+            return sample;
         }
 
         public int StorageSize => Memory.Count;
