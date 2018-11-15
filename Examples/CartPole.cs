@@ -14,7 +14,7 @@ namespace Examples
 
             Agent agent = new AgentQL(env, new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), 0.002, 0.8), true);
             agent.Train(500, 300, false);
-            Console.WriteLine($"Average reward {agent.Test(100, 300, true)}");
+            Console.WriteLine($"Average reward {agent.Test(10, 300, true)}");
 
             //while (!env.Step((int)env.ActionSpace.Sample()[0], out var nextState, out var reward))
             //{

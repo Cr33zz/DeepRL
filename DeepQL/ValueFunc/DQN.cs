@@ -8,7 +8,7 @@ namespace DeepQL.ValueFunc
 {
     public class DQN : ValueFunctionModel
     {
-        public DQN(Shape inputShape, int numberOfActions, double learningRate, double discountFactor)
+        public DQN(Shape inputShape, int numberOfActions, double learningRate, double discountFactor, int replaySize = 2000, int batchSize = 32)
             : base(inputShape, numberOfActions, learningRate, discountFactor)
         {
             Model.AddLayer(new Flatten(inputShape));
@@ -16,6 +16,9 @@ namespace DeepQL.ValueFunc
             Model.AddLayer(new Dense(Model.LastLayer(), 24, Activation.ReLU));
             Model.AddLayer(new Dense(Model.LastLayer(), numberOfActions, Activation.Linear));
             Model.Optimize(new Adam(learningRate), Loss.MeanSquareError);
+
+            ReplayMem = new ReplayMemory(replaySize);
+            BatchSize = batchSize;
         }
 
         public override Tensor GetOptimalAction(Tensor state)
@@ -30,7 +33,13 @@ namespace DeepQL.ValueFunc
         {
             ReplayMem.Push(new Transition(state, action, reward, nextState, done));
 
-            foreach (var trans in ReplayMem.Sample(BatchSize))
+            if (ReplayMem.StorageSize >= BatchSize)
+                Train(ReplayMem.Sample(BatchSize));
+        }
+
+        protected override void Train(List<Transition> transitions)
+        {
+            foreach (var trans in transitions)
             {
                 // calculate new predicted reward
                 var target = trans.Reward;
@@ -44,13 +53,8 @@ namespace DeepQL.ValueFunc
             }
         }
 
-        protected override void Train(List<Transition> transitions)
-        {
-            throw new System.NotImplementedException();
-        }
-
         private NeuralNetwork Model = new NeuralNetwork("DQN_agent");
-        private ReplayMemory ReplayMem = new ReplayMemory(1000);
-        private int BatchSize = 32;
+        private ReplayMemory ReplayMem;
+        private int BatchSize;
     }
 }
