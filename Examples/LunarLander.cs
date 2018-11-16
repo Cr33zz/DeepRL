@@ -11,10 +11,15 @@ namespace Examples
         {
             Env env = new LunarLanderEnv();
 
-            while (!env.Step(env.ActionSpace.Sample(), out var nextState, out var reward))
+            while (true)
             {
-                env.Render();
-                Thread.Sleep(15);
+                while (!env.Step(env.ActionSpace.Sample(), out var nextState, out var reward))
+                {
+                    env.Render();
+                    Thread.Sleep(15);
+                }
+
+                env.Reset();
             }
 
             return;

@@ -27,8 +27,13 @@ namespace DeepQL.Gyms
     // Created by Oleg Klimov. Licensed on the same terms as the rest of OpenAI Gym.
     public class LunarLanderEnv : Env
     {
-        public LunarLanderEnv(bool continuous = false)
-        : base(null, null)
+        public LunarLanderEnv()
+            : this(false)
+        {
+        }
+
+        protected LunarLanderEnv(bool continuous = false)
+            : base(null, null)
         {
             this.continuous = continuous;
 
@@ -108,7 +113,7 @@ namespace DeepQL.Gyms
                 var flagy1 = helipad_y;
                 var flagy2 = flagy1 + 50 / SCALE;
                 Viewer.DrawPolyline(new List<double[]> { new double[] {x, flagy1}, new double[] {x, flagy2}}).SetColor(1, 1, 1);
-                Viewer.DrawPolyline(new List<double[]> { new double[] {x, flagy2}, new double[] {x, flagy2 - 10 / SCALE}, new double[] {x + 25 / SCALE, flagy2 - 5 / SCALE}}).SetColor(0.8, 0.8, 0);
+                Viewer.DrawPolygon(new List<double[]> { new double[] {x, flagy2}, new double[] {x, flagy2-10/SCALE}, new double[] {x+25/SCALE, flagy2-5/SCALE}}).SetColor(0.8, 0.8, 0);
             }
 
             Viewer.Render();
@@ -141,7 +146,7 @@ namespace DeepQL.Gyms
             height[(int)Math.Floor(CHUNKS / 2.0) + 0] = helipad_y;
             height[(int)Math.Floor(CHUNKS / 2.0) + 1] = helipad_y;
             height[(int)Math.Floor(CHUNKS / 2.0) + 2] = helipad_y;
-            var smooth_y = Enumerable.Range(0, CHUNKS).Select(i => 0.33f * (height[i - 1] + height[i + 0] + height[i + 1])).ToArray();
+            var smooth_y = Enumerable.Range(0, CHUNKS).Select(i => 0.33f * (height[(CHUNKS + i - 1)%CHUNKS] + height[i + 0] + height[i + 1])).ToArray();
 
             moon = world.CreateStaticBody(new b2FixtureDef(){ shape = new b2EdgeShape().Set(new b2Vec2(0, 0), new b2Vec2(W, 0)) });
             sky_polys.Clear();
@@ -159,7 +164,7 @@ namespace DeepQL.Gyms
             lander = world.CreateDynamicBody(new b2Vec2(VIEWPORT_W / SCALE / 2, initial_y), 
                                              0.0f,
                                              new b2FixtureDef() {
-                                                 shape = new b2PolygonShape() {m_vertices = LANDER_POLY.Select(p => new b2Vec2(p[0] / SCALE, p[1] / SCALE)).ToArray()},
+                                                 shape = new b2PolygonShape().Set(LANDER_POLY.Select(p => new b2Vec2(p[0] / SCALE, p[1] / SCALE)).ToArray()),
                                                  density = 5.0f,
                                                  friction = 0.1f,
                                                  filter = new b2Filter() {categoryBits = 0x0010, maskBits = 0x001 }, // collide only with ground
@@ -378,14 +383,14 @@ namespace DeepQL.Gyms
             {
                 if (Env.lander == contact.GetFixtureA().GetBody() || Env.lander == contact.GetFixtureB().GetBody())
                     Env.game_over = true;
-                foreach (var leg in new[] { Env.legs[1], Env.legs[3] })
+                foreach (var leg in Env.legs)
                     if (leg == contact.GetFixtureA().GetBody() || leg == contact.GetFixtureB().GetBody())
                         (leg.GetUserData() as CustomBodyData).GroundContact = true;
             }
 
             public override void EndContact(b2Contact contact)
             {
-                foreach (var leg in new[] { Env.legs[1], Env.legs[3] })
+                foreach (var leg in Env.legs)
                     if (leg == contact.GetFixtureA().GetBody() || leg == contact.GetFixtureB().GetBody())
                         (leg.GetUserData() as CustomBodyData).GroundContact = false;
             }
@@ -417,7 +422,7 @@ namespace DeepQL.Gyms
         private List<b2Body> drawlist = new List<b2Body>();
         private ContactDetector contact_detector;
 
-        private bool continuous = false;
+        private readonly bool continuous;
 
         private const int FPS = 50;
         private const float SCALE = 30.0f;   // affects how fast-paced the game is, forces should be adjusted as well
@@ -439,5 +444,10 @@ namespace DeepQL.Gyms
 
         private const int VIEWPORT_W = 600;
         private const int VIEWPORT_H = 400;
+    }
+
+    public class LunarLanderContinuousEnv : LunarLanderEnv
+    {
+        public LunarLanderContinuousEnv() : base(true) { }
     }
 }
