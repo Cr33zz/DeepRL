@@ -91,6 +91,7 @@
     <Compile Include="Gyms\AtariEnv.cs" />
     <Compile Include="Gyms\BipedalWalkerEnv.cs" />
     <Compile Include="Gyms\ContinuousMountainCarEnv.cs" />
+    <Compile Include="Gyms\LunarLanderEnv.cs" />
     <Compile Include="Gyms\MountainCarEnv.cs" />
     <Compile Include="Gyms\PendulumEnv.cs" />
     <Compile Include="Misc\GlobalRandom.cs" />
