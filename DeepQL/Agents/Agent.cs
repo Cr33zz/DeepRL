@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using DeepQL.Environments;
+using DeepQL.Misc;
 using Neuro.Tensors;
 
 namespace DeepQL.Agents
@@ -18,6 +19,11 @@ namespace DeepQL.Agents
 
         public void Train(int episodes, int maxStepsPerEpisode, bool render)
         {
+            var rewardChart = new Neuro.ChartGenerator($"{Name}_reward.png", Name, "Episode");
+            rewardChart.AddSeries(0, "Reward", System.Drawing.Color.LightBlue);
+            rewardChart.AddSeries(1, "Avg reward", System.Drawing.Color.DarkOrange);
+            var moveAvg = new MovingAverage(100);
+
             for (int ep = 0; ep < episodes; ++ep)
             {
                 LastObservation = Env.Reset();
@@ -55,6 +61,13 @@ namespace DeepQL.Agents
                     Console.WriteLine($"Ep {ep}: reward {Math.Round(totalReward, 2)} epsilon {Math.Round(Epsilon, 4)}");
 
                 Epsilon = Math.Max(MinEpsilon, Epsilon * EpsilonDecay);
+
+                moveAvg.Add(totalReward);
+                rewardChart.AddData(ep, totalReward, 0);
+                rewardChart.AddData(ep, moveAvg.Avg, 1);
+
+                if (ep % 20 == 0)
+                    rewardChart.Save();
             }
         }
 

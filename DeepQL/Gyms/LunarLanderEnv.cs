@@ -413,7 +413,7 @@ namespace DeepQL.Gyms
         private List<b2Body> particles = new List<b2Body>();
         private b2Body lander;
         private bool game_over;
-        private double prev_reward;
+        //private double prev_reward;
         private float prev_shaping;
         private float helipad_x1;
         private float helipad_x2;

@@ -98,6 +98,7 @@
     <Compile Include="Gyms\CartPoleEnv.cs" />
     <Compile Include="Gyms\TaxiEnv.cs" />
     <Compile Include="Misc\KinematicIntegrator.cs" />
+    <Compile Include="Misc\MovingAverage.cs" />
     <Compile Include="Misc\OutputColorizer.cs" />
     <Compile Include="Misc\RandomExtensions.cs" />
     <Compile Include="Misc\TensorExtensions.cs" />

@@ -21,8 +21,6 @@ namespace Examples
 
                 env.Reset();
             }
-
-            return;
         }
     }
 }
