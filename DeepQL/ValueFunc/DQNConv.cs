@@ -13,11 +13,11 @@ namespace DeepQL.ValueFunc
         {
             Model = new NeuralNetwork("DQNConv");
             Model.AddLayer(new Convolution(inputShape, 8, 32, 2, Activation.ELU));
-            Model.AddLayer(new Convolution(Model.LastLayer(), 4, 64, 2, Activation.ELU));
-            Model.AddLayer(new Convolution(Model.LastLayer(), 4, 128, 2, Activation.ELU));
-            Model.AddLayer(new Flatten(Model.LastLayer()));
-            Model.AddLayer(new Dense(Model.LastLayer(), 512, Activation.ELU));
-            Model.AddLayer(new Dense(Model.LastLayer(), numberOfActions, Activation.Softmax));
+            Model.AddLayer(new Convolution(Model.LastLayer, 4, 64, 2, Activation.ELU));
+            Model.AddLayer(new Convolution(Model.LastLayer, 4, 128, 2, Activation.ELU));
+            Model.AddLayer(new Flatten(Model.LastLayer));
+            Model.AddLayer(new Dense(Model.LastLayer, 512, Activation.ELU));
+            Model.AddLayer(new Dense(Model.LastLayer, numberOfActions, Activation.Softmax));
 
             TemporalDataSize = temporalDataSize;
         }

@@ -20,8 +20,8 @@ namespace DeepQL.Agents
         public void Train(int episodes, int maxStepsPerEpisode, bool render)
         {
             var rewardChart = new Neuro.ChartGenerator($"{Name}_reward.png", Name, "Episode");
-            rewardChart.AddSeries(0, "Reward", System.Drawing.Color.BurlyWood);
-            rewardChart.AddSeries(1, "Avg reward", System.Drawing.Color.DarkOrange);
+            rewardChart.AddSeries(0, "Reward", System.Drawing.Color.LightGray);
+            rewardChart.AddSeries(1, "Avg reward", System.Drawing.Color.Blue);
             var moveAvg = new MovingAverage(100);
 
             for (int ep = 0; ep < episodes; ++ep)

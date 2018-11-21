@@ -60,8 +60,9 @@
       <HintPath>..\packages\AleControl.0.10.0.75-beta1\lib\net40\AleControlLib.dll</HintPath>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-    <Reference Include="DeepQL">
-      <HintPath>..\DeepQL\bin\x64\Debug\DeepQL.dll</HintPath>
+    <Reference Include="DeepQL, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\DeepQL\bin\x64\DeepQL.dll</HintPath>
     </Reference>
     <Reference Include="Neuro">
       <HintPath>..\DeepQL\Neuro.dll</HintPath>
