@@ -19,7 +19,7 @@ namespace DeepQL.ValueFunc
             return action;
         }
 
-        public override void OnTransition(Tensor state, Tensor action, double reward, Tensor nextState, bool done)
+        public override void OnStep(Tensor state, Tensor action, double reward, Tensor nextState, bool done)
         {
             int stateInt = (int)state[0];
             int actionInt = (int)action[0];
@@ -29,7 +29,7 @@ namespace DeepQL.ValueFunc
         protected override void Train(List<Transition> transitions)
         {
             foreach (var trans in transitions)
-                OnTransition(trans.State, trans.Action, trans.Reward, trans.NextState, trans.Done);
+                OnStep(trans.State, trans.Action, trans.Reward, trans.NextState, trans.Done);
         }
 
         private int BestActionBasedOnQTable(int state)

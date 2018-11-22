@@ -22,7 +22,7 @@ namespace DeepQL.ValueFunc
             TemporalDataSize = temporalDataSize;
         }
 
-        public override void OnTransition(Tensor state, Tensor action, double reward, Tensor nextState, bool done)
+        public override void OnStep(Tensor state, Tensor action, double reward, Tensor nextState, bool done)
         {
             UpdateTemporalData(state);
             //Memory.Push(new Transition(Tensor.Merge(TemporalData, 4), action, reward, nextState, done));

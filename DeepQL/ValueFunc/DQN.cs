@@ -10,7 +10,7 @@ namespace DeepQL.ValueFunc
 {
     public class DQN : ValueFunctionModel
     {
-        public DQN(Shape inputShape, int numberOfActions, double learningRate, double discountFactor, int replaySize = 2000, int batchSize = 32)
+        public DQN(Shape inputShape, int numberOfActions, double learningRate, double discountFactor, int replaySize = 1000)
             : base(inputShape, numberOfActions, learningRate, discountFactor)
         {
             Model = new NeuralNetwork("DQN_agent");
@@ -20,8 +20,9 @@ namespace DeepQL.ValueFunc
             Model.AddLayer(new Dense(Model.LastLayer, numberOfActions, Activation.Linear));
             Model.Optimize(new Adam(learningRate), Loss.MeanSquareError);
 
+            TargetModel = Model.Clone();
+
             ReplayMem = new ReplayMemory(replaySize);
-            BatchSize = batchSize;
 
             ErrorChart = new ChartGenerator($"DQN_agent_error", "Reward prediction error", "Episode");
             ErrorChart.AddSeries(0, "Error", System.Drawing.Color.LightGray);
@@ -36,12 +37,17 @@ namespace DeepQL.ValueFunc
             return action;
         }
 
-        public override void OnTransition(Tensor state, Tensor action, double reward, Tensor nextState, bool done)
+        public override void OnStep(Tensor state, Tensor action, double reward, Tensor nextState, bool done)
         {
             ReplayMem.Push(new Transition(state, action, reward, nextState, done));
 
             if (ReplayMem.StorageSize >= BatchSize)
                 Train(ReplayMem.Sample(BatchSize));
+        }
+
+        public override void OnEpisodeEnd(int episode)
+        {
+            Model.CopyParametersTo(TargetModel);
         }
 
         public override void SaveState(string filename)
@@ -57,7 +63,6 @@ namespace DeepQL.ValueFunc
         protected override void Train(List<Transition> transitions)
         {
             var stateShape = Model.Layer(0).InputShape;
-            var targetShape = Model.LastLayer.OutputShape;
             Tensor states = new Tensor(new Shape(stateShape.Width, stateShape.Height, stateShape.Depth, transitions.Count));
             Tensor nextStates = new Tensor(states.Shape);
 
@@ -67,8 +72,8 @@ namespace DeepQL.ValueFunc
                 transitions[i].NextState.CopyBatchTo(0, i, nextStates);
             }
 
-            Tensor futureRewards = Model.Predict(nextStates);
             Tensor rewards = Model.Predict(states); // this is our original prediction
+            Tensor futureRewards = TargetModel.Predict(nextStates);
 
             double totalAbsError = 0;
 
@@ -78,7 +83,7 @@ namespace DeepQL.ValueFunc
 
                 var reward = trans.Reward;
                 if (!trans.Done)
-                    reward = trans.Reward + DiscountFactor * futureRewards.Max(i); // this is the expected prediction for selected action
+                    reward += DiscountFactor * futureRewards.Max(i); // this is the expected prediction for selected action
 
                 totalAbsError += Math.Abs(rewards[0, (int)trans.Action[0], 0, i] - reward);
 
@@ -96,9 +101,10 @@ namespace DeepQL.ValueFunc
             Model.Fit(states, rewards, 1, 0, Track.Nothing);
         }
 
+        public int BatchSize = 32;
         protected NeuralNetwork Model;
+        protected NeuralNetwork TargetModel;
         private ReplayMemory ReplayMem;
-        private int BatchSize;
         private ChartGenerator ErrorChart;
         private MovingAverage MoveAvg = new MovingAverage(100);
         private int TrainingsCounts;

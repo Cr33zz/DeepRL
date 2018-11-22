@@ -9,12 +9,11 @@ namespace DeepQL.Agents
 {
     public abstract class Agent
     {
-        protected Agent(string name, Env env, bool verbose = false)
+        protected Agent(string name, Env env)
         {
             Name = name;
             Env = env;
             Epsilon = MaxEpsilon;
-            Verbose = verbose;
         }
 
         public void Train(int episodes, int maxStepsPerEpisode, bool render)
@@ -40,6 +39,10 @@ namespace DeepQL.Agents
                         action = GetOptimalAction(); // exploit
 
                     bool done = Env.Step(action, out var observation, out var reward);
+
+                    if (done && !double.IsNaN(RewardOnDone))
+                        reward = RewardOnDone;
+
                     totalReward += reward;
 
                     Render(render);
@@ -109,7 +112,7 @@ namespace DeepQL.Agents
 
         protected abstract Tensor GetOptimalAction();
         protected abstract void OnStep(int step, Tensor action, double reward, Tensor nextState, bool done);
-        protected virtual void OnEpisodeEnd(int episode) { }        
+        protected virtual void OnEpisodeEnd(int episode) { }
 
         protected void Render(bool render)
         {
@@ -123,11 +126,12 @@ namespace DeepQL.Agents
         protected Tensor LastObservation;
         protected readonly Env Env;
         
-        protected double Epsilon; // Exploration probability
         public double MinEpsilon = 0.01;
         public double MaxEpsilon = 1.0;
         public double EpsilonDecay = 0.995;
+        protected double Epsilon; // Exploration probability
 
+        public double RewardOnDone = double.NaN;
         public bool Verbose = false;
         public int StepsPerSec = 30;
 
