@@ -20,13 +20,14 @@ namespace DeepQL.ValueFunc
             Model.AddLayer(new Dense(Model.LastLayer, numberOfActions, Activation.Linear));
             Model.Optimize(new Adam(learningRate), Loss.MeanSquareError);
 
-            TargetModel = Model.Clone();
+            if (UseTargetModel)
+                TargetModel = Model.Clone();
 
             ReplayMem = new ReplayMemory(replaySize);
 
-            ErrorChart = new ChartGenerator($"DQN_agent_error", "Reward prediction error", "Episode");
-            ErrorChart.AddSeries(0, "Error", System.Drawing.Color.LightGray);
-            ErrorChart.AddSeries(1, "Avg Error", System.Drawing.Color.Red);
+            ErrorChart = new ChartGenerator($"DQN_agent_error", "Q prediction error", "Epoch");
+            ErrorChart.AddSeries(0, "MSE", System.Drawing.Color.LightGray);
+            ErrorChart.AddSeries(1, "Avg MSE", System.Drawing.Color.Red);
         }
 
         public override Tensor GetOptimalAction(Tensor state)
@@ -47,7 +48,8 @@ namespace DeepQL.ValueFunc
 
         public override void OnEpisodeEnd(int episode)
         {
-            Model.CopyParametersTo(TargetModel);
+            if (UseTargetModel)
+                Model.CopyParametersTo(TargetModel);
         }
 
         public override void SaveState(string filename)
@@ -73,9 +75,9 @@ namespace DeepQL.ValueFunc
             }
 
             Tensor rewards = Model.Predict(states); // this is our original prediction
-            Tensor futureRewards = TargetModel.Predict(nextStates);
+            Tensor futureRewards = (UseTargetModel ? TargetModel : Model).Predict(nextStates);
 
-            double totalAbsError = 0;
+            double totalSquareError = 0;
 
             for (int i = 0; i < transitions.Count; ++i)
             {
@@ -85,14 +87,15 @@ namespace DeepQL.ValueFunc
                 if (!trans.Done)
                     reward += DiscountFactor * futureRewards.Max(i); // this is the expected prediction for selected action
 
-                totalAbsError += Math.Abs(rewards[0, (int)trans.Action[0], 0, i] - reward);
+                double error = reward - rewards[0, (int)trans.Action[0], 0, i];
+                totalSquareError += error * error;
 
                 rewards[0, (int)trans.Action[0], 0, i] = reward;
             }
 
-            var averageAbsError = totalAbsError / transitions.Count;
-            MoveAvg.Add(averageAbsError);
-            ErrorChart.AddData(TrainingsCounts, averageAbsError, 0);
+            var meanSquareError = totalSquareError / transitions.Count;
+            MoveAvg.Add(meanSquareError);
+            ErrorChart.AddData(TrainingsCounts, meanSquareError, 0);
             ErrorChart.AddData(TrainingsCounts, MoveAvg.Avg, 1);
             ++TrainingsCounts;
             if (TrainingsCounts % 200 == 0)
@@ -102,6 +105,7 @@ namespace DeepQL.ValueFunc
         }
 
         public int BatchSize = 32;
+        public bool UseTargetModel = false;
         protected NeuralNetwork Model;
         protected NeuralNetwork TargetModel;
         private ReplayMemory ReplayMem;
