@@ -6,7 +6,7 @@ namespace DeepQL.BehaviorPolicies
 {
     public class EpsilonGreedyPolicy : RandomPolicy
     {
-        public EpsilonGreedyPolicy(Space actionSpate, ValueFunctionModel qFunc, double epsilon)
+        public EpsilonGreedyPolicy(Space actionSpate, ValueFunctionModel qFunc, float epsilon)
             : base(actionSpate)
         {
             QFunction = qFunc;
@@ -22,6 +22,6 @@ namespace DeepQL.BehaviorPolicies
         }
 
         private ValueFunctionModel QFunction;
-        public readonly double Epsilon;
+        public readonly float Epsilon;
     }
 }

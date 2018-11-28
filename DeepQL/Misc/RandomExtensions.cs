@@ -8,9 +8,9 @@ namespace DeepQL
 {
     public static partial class RandomExtensions
     {
-        public static double NextDouble(this Random rng, double low, double high)
+        public static float NextFloat(this Random rng, float low, float high)
         {
-            return low + (high - low) * rng.NextDouble();
+            return low + (high - low) * (float)rng.NextDouble();
         }
 
         public static int[] Next(this Random rng, int low, int high, int size)
@@ -21,11 +21,11 @@ namespace DeepQL
             return result;
         }
 
-        public static double[] NextDouble(this Random rng, double low, double high, int size)
+        public static float[] Nextfloat(this Random rng, float low, float high, int size)
         {
-            var result = new double[size];
+            var result = new float[size];
             for (int i = 0; i < size; ++i)
-                result[i] = rng.NextDouble(low, high);
+                result[i] = rng.NextFloat(low, high);
             return result;
         }
 
@@ -33,7 +33,7 @@ namespace DeepQL
         {
             var result = new float[size];
             for (int i = 0; i < size; ++i)
-                result[i] = (float)rng.NextDouble(low, high);
+                result[i] = (float)rng.NextFloat(low, high);
             return result;
         }
     }

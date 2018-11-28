@@ -42,10 +42,10 @@ namespace DeepQL.Misc
                 Show();
             }
 
-            public void SetBounds(double left, double right, double bottom, double top)
+            public void SetBounds(float left, float right, float bottom, float top)
             {
-                double scaleX = Width / (right - left);
-                double scaleY = Height / (top - bottom);
+                float scaleX = Width / (right - left);
+                float scaleY = Height / (top - bottom);
 
                 Trans.SetTranslation(-left * scaleX, -bottom * scaleY);
                 Trans.SetScale(scaleX, scaleY);
@@ -94,7 +94,7 @@ namespace DeepQL.Misc
                     gl.ReadPixels(0, 0, Width, Height, OpenGL.GL_RGB, OpenGL.GL_UNSIGNED_BYTE, OutputRrbArray);
             }
 
-            public Geom DrawCircle(double radius = 10.0, int res = 30, bool filled = true, List<Attr> attrs = null)
+            public Geom DrawCircle(float radius = 10.0f, int res = 30, bool filled = true, List<Attr> attrs = null)
             {
                 var geom = MakeCircle(radius, res, filled);
                 AddAttrs(geom, attrs);
@@ -102,7 +102,7 @@ namespace DeepQL.Misc
                 return geom;
             }
 
-            public Geom DrawPolygon(List<double[]> vertices, bool filled = true, List<Attr> attrs = null)
+            public Geom DrawPolygon(List<float[]> vertices, bool filled = true, List<Attr> attrs = null)
             {
                 var geom = MakePolygon(vertices, filled);
                 AddAttrs(geom, attrs);
@@ -110,7 +110,7 @@ namespace DeepQL.Misc
                 return geom;
             }
 
-            public Geom DrawPolyline(List<double[]> vertices, List<Attr> attrs = null)
+            public Geom DrawPolyline(List<float[]> vertices, List<Attr> attrs = null)
             {
                 var geom = MakePolyLine(vertices);
                 AddAttrs(geom, attrs);
@@ -119,7 +119,7 @@ namespace DeepQL.Misc
             }
 
 
-            public Geom DrawLine(double[] start, double[] end, List<Attr> attrs = null)
+            public Geom DrawLine(float[] start, float[] end, List<Attr> attrs = null)
             {
                 var geom = new Line(start, end);
                 AddAttrs(geom, attrs);
@@ -176,7 +176,7 @@ namespace DeepQL.Misc
         {
             protected Geom()
             {
-                _Color = new Color(new double[] {0, 0, 0, 1});
+                _Color = new Color(new float[] {0, 0, 0, 1});
                 AddAttr(_Color);
                 _LineWidth = new LineWidth(1);
                 AddAttr(_LineWidth);
@@ -199,7 +199,7 @@ namespace DeepQL.Misc
                 return this;
             }
 
-            public Geom SetColor(double r, double g, double b)
+            public Geom SetColor(float r, float g, float b)
             {
                 _Color.Vec4 = new [] {r, g, b, 1};
                 return this;
@@ -224,7 +224,7 @@ namespace DeepQL.Misc
 
         public class Transform : Attr
         {
-            public Transform(double[] translation = null, double rotation = 0, double[] scale = null)
+            public Transform(float[] translation = null, float rotation = 0, float[] scale = null)
             {
                 if (translation != null) SetTranslation(translation[0], translation[1]);
                 SetRotation(rotation);
@@ -244,35 +244,35 @@ namespace DeepQL.Misc
                 gl.PopMatrix();
             }
 
-            public void SetTranslation(double newX, double newY)
+            public void SetTranslation(float newX, float newY)
             {
                 Translation[0] = newX;
                 Translation[1] = newY;
             }
 
-            public void SetRotation(double rot)
+            public void SetRotation(float rot)
             {
                 Rotation = rot;
             }
 
-            public void SetScale(double newX, double newY)
+            public void SetScale(float newX, float newY)
             {
                 Scale[0] = newX;
                 Scale[1] = newY;
             }
 
-            private double[] Translation = new double[2];
-            private double Rotation;
-            private double[] Scale = new double[2] {1, 1};
+            private float[] Translation = new float[2];
+            private float Rotation;
+            private float[] Scale = new float[2] {1, 1};
 
-            private const double RAD2DEG = 57.29577951308232;
+            private const float RAD2DEG = 57.29577951308232f;
         }
 
         public class Color : Attr
         {
-            public Color(double[] vec4)
+            public Color(float[] vec4)
             {
-                Vec4 = (double[]) vec4.Clone();
+                Vec4 = (float[]) vec4.Clone();
             }
 
             public override void Enable(OpenGL gl)
@@ -280,7 +280,7 @@ namespace DeepQL.Misc
                 gl.Color(Vec4);
             }
 
-            public double[] Vec4;
+            public float[] Vec4;
         }
 
         public class LineStyle : Attr
@@ -331,9 +331,9 @@ namespace DeepQL.Misc
 
         public class FilledPolygon : Geom
         {
-            public FilledPolygon(List<double[]> vertices)
+            public FilledPolygon(List<float[]> vertices)
             {
-                Vertices = new List<double[]>(vertices);
+                Vertices = new List<float[]>(vertices);
             }
 
             protected override void OnRender(OpenGL gl)
@@ -351,7 +351,7 @@ namespace DeepQL.Misc
                 gl.End();
             }
 
-            public List<double[]> Vertices;
+            public List<float[]> Vertices;
         }
 
         public class Image : Geom
@@ -382,10 +382,10 @@ namespace DeepQL.Misc
 
         public class Line : Geom
         {
-            public Line(double[] start, double[] end)
+            public Line(float[] start, float[] end)
             {
-                Start = (double[]) start.Clone();
-                End = (double[]) end.Clone();
+                Start = (float[]) start.Clone();
+                End = (float[]) end.Clone();
             }
 
             protected override void OnRender(OpenGL gl)
@@ -396,15 +396,15 @@ namespace DeepQL.Misc
                 gl.End();
             }
 
-            public double[] Start;
-            public double[] End;
+            public float[] Start;
+            public float[] End;
         }
 
         public class Polyline : Geom
         {
-            public Polyline(List<double[]> vertices, bool close)
+            public Polyline(List<float[]> vertices, bool close)
             {
-                Vertices = new List<double[]>(vertices);
+                Vertices = new List<float[]>(vertices);
                 Close = close;
             }
 
@@ -416,7 +416,7 @@ namespace DeepQL.Misc
                 gl.End();
             }
 
-            public List<double[]> Vertices;
+            public List<float[]> Vertices;
             public bool Close;
         }
 
@@ -438,13 +438,13 @@ namespace DeepQL.Misc
             private readonly Geom[] Geoms;
         }
 
-        public static Geom MakeCircle(double radius = 10, int res = 30, bool filled = true)
+        public static Geom MakeCircle(float radius = 10, int res = 30, bool filled = true)
         {
-            List<double[]> points = new List<double[]>();
+            List<float[]> points = new List<float[]>();
             for (int i = 0; i < res; ++i)
             {
-                double ang = 2 * Math.PI * i / res;
-                points.Add(new[] {Math.Cos(ang) * radius, Math.Sin(ang) * radius});
+                float ang = 2 * (float)Math.PI * i / res;
+                points.Add(new[] { (float)Math.Cos(ang) * radius, (float)Math.Sin(ang) * radius});
             }
 
             if (filled)
@@ -452,22 +452,22 @@ namespace DeepQL.Misc
             return new Polyline(points, true);
         }
 
-        public static Geom MakePolygon(List<double[]> v, bool filled = true)
+        public static Geom MakePolygon(List<float[]> v, bool filled = true)
         {
             if (filled)
                 return new FilledPolygon(v);
             return new Polyline(v, true);
         }
 
-        public static Geom MakePolyLine(List<double[]> v)
+        public static Geom MakePolyLine(List<float[]> v)
         {
             return new Polyline(v, false);
         }
 
-        public static Geom MakeCapsule(double length, double width)
+        public static Geom MakeCapsule(float length, float width)
         {
-            double l = 0, r = length, t = width / 2, b = -width / 2;
-            var box = MakePolygon(new List<double[]> {new[] {l, b}, new[] {l, t}, new[] {r, t}, new[] {r, b}});
+            float l = 0, r = length, t = width / 2, b = -width / 2;
+            var box = MakePolygon(new List<float[]> {new[] {l, b}, new[] {l, t}, new[] {r, t}, new[] {r, b}});
             var circ0 = MakeCircle(width / 2);
             var circ1 = MakeCircle(width / 2);
             circ1.AddAttr(new Transform(new[] {length, 0}));

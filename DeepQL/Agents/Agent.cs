@@ -27,7 +27,7 @@ namespace DeepQL.Agents
             {
                 LastObservation = Env.Reset();
 
-                double totalReward = 0;
+                float totalReward = 0;
 
                 for (int step = 0; step < maxStepsPerEpisode; ++step)
                 {
@@ -40,7 +40,7 @@ namespace DeepQL.Agents
 
                     bool done = Env.Step(action, out var observation, out var reward);
 
-                    if (done && !double.IsNaN(RewardOnDone))
+                    if (done && !float.IsNaN(RewardOnDone))
                         reward = RewardOnDone;
 
                     totalReward += reward;
@@ -74,14 +74,14 @@ namespace DeepQL.Agents
             }
         }
 
-        public double Test(int episodes, int maxStepsPerEpisode, bool render)
+        public float Test(int episodes, int maxStepsPerEpisode, bool render)
         {
-            double[] totalRewards = new double[episodes];
+            float[] totalRewards = new float[episodes];
 
             for (int ep = 0; ep < episodes; ++ep)
             {
                 LastObservation = Env.Reset();
-                double totalReward = 0;
+                float totalReward = 0;
 
                 for (int step = 0; step < maxStepsPerEpisode; ++step)
                 {
@@ -111,7 +111,7 @@ namespace DeepQL.Agents
         public virtual void Load(string filename) { }
 
         protected abstract Tensor GetOptimalAction();
-        protected abstract void OnStep(int step, Tensor action, double reward, Tensor nextState, bool done);
+        protected abstract void OnStep(int step, Tensor action, float reward, Tensor nextState, bool done);
         protected virtual void OnEpisodeEnd(int episode) { }
 
         protected void Render(bool render)
@@ -126,12 +126,12 @@ namespace DeepQL.Agents
         protected Tensor LastObservation;
         protected readonly Env Env;
         
-        public double MinEpsilon = 0.01;
-        public double MaxEpsilon = 1.0;
-        public double EpsilonDecay = 0.995;
-        protected double Epsilon; // Exploration probability
+        public float MinEpsilon = 0.01f;
+        public float MaxEpsilon = 1.0f;
+        public float EpsilonDecay = 0.995f;
+        protected float Epsilon; // Exploration probability
 
-        public double RewardOnDone = double.NaN;
+        public float RewardOnDone = float.NaN;
         public bool Verbose = false;
         public int StepsPerSec = 30;
 

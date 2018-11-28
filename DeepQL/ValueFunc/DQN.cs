@@ -10,7 +10,7 @@ namespace DeepQL.ValueFunc
 {
     public class DQN : ValueFunctionModel
     {
-        public DQN(Shape inputShape, int numberOfActions, double learningRate, double discountFactor, int replaySize = 1000)
+        public DQN(Shape inputShape, int numberOfActions, float learningRate, float discountFactor, int replaySize = 1000)
             : base(inputShape, numberOfActions, learningRate, discountFactor)
         {
             Model = new NeuralNetwork("DQN_agent");
@@ -38,7 +38,7 @@ namespace DeepQL.ValueFunc
             return action;
         }
 
-        public override void OnStep(Tensor state, Tensor action, double reward, Tensor nextState, bool done)
+        public override void OnStep(Tensor state, Tensor action, float reward, Tensor nextState, bool done)
         {
             ReplayMem.Push(new Transition(state, action, reward, nextState, done));
 
@@ -77,7 +77,7 @@ namespace DeepQL.ValueFunc
             Tensor rewards = Model.Predict(states); // this is our original prediction
             Tensor futureRewards = (UseTargetModel ? TargetModel : Model).Predict(nextStates);
 
-            double totalSquareError = 0;
+            float totalSquareError = 0;
 
             for (int i = 0; i < transitions.Count; ++i)
             {
@@ -87,25 +87,29 @@ namespace DeepQL.ValueFunc
                 if (!trans.Done)
                     reward += DiscountFactor * futureRewards.Max(i); // this is the expected prediction for selected action
 
-                double error = reward - rewards[0, (int)trans.Action[0], 0, i];
+                float error = reward - rewards[0, (int)trans.Action[0], 0, i];
                 totalSquareError += error * error;
 
                 rewards[0, (int)trans.Action[0], 0, i] = reward;
             }
 
-            var meanSquareError = totalSquareError / transitions.Count;
-            MoveAvg.Add(meanSquareError);
-            ErrorChart.AddData(TrainingsCounts, meanSquareError, 0);
-            ErrorChart.AddData(TrainingsCounts, MoveAvg.Avg, 1);
+            if (ChartSaveFreq > 0)
+            {
+                var meanSquareError = totalSquareError / transitions.Count;
+                MoveAvg.Add(meanSquareError);
+                ErrorChart.AddData(TrainingsCounts, meanSquareError, 0);
+                ErrorChart.AddData(TrainingsCounts, MoveAvg.Avg, 1);
+                if (TrainingsCounts % ChartSaveFreq == 0)
+                    ErrorChart.Save();
+            }
             ++TrainingsCounts;
-            if (TrainingsCounts % 200 == 0)
-                ErrorChart.Save();
 
-            Model.Fit(states, rewards, 1, 0, Track.Nothing);
+            Model.Fit(states, rewards, -1, 1, 0, Track.Nothing);
         }
 
         public int BatchSize = 32;
         public bool UseTargetModel = false;
+        public int ChartSaveFreq = 200;
         protected NeuralNetwork Model;
         protected NeuralNetwork TargetModel;
         private ReplayMemory ReplayMem;

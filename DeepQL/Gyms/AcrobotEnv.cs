@@ -63,32 +63,32 @@ namespace DeepQL.Gyms
             if (Viewer == null)
             {
                 Viewer = new Rendering.Viewer(500, 500);
-                var bound = LINK_LENGTH_1 + LINK_LENGTH_2 + 0.2; // 2.2 for default
+                var bound = LINK_LENGTH_1 + LINK_LENGTH_2 + 0.2f; // 2.2 for default
                 Viewer.SetBounds(-bound, bound, -bound, bound);
             }
 
             if (s == null)
                 return null;
 
-            var p1 = new [] { LINK_LENGTH_1 * Math.Sin(s[0]), - LINK_LENGTH_1 * Math.Cos(s[0]) };
+            var p1 = new [] { LINK_LENGTH_1 * (float)Math.Sin(s[0]), - LINK_LENGTH_1 * (float)Math.Cos(s[0]) };
             //var p2 = new [] { p1[0] - LINK_LENGTH_2 * Math.Cos(s[0] + s[1]), p1[1] + LINK_LENGTH_2 * Math.Sin(s[0] + s[1]) };
 
-            var xys = new List<double[]>{ new double[] {0, 0}, p1 };
-            var thetas = new [] { s[0]-Math.PI/2, s[0]+s[1]- Math.PI / 2 };
+            var xys = new List<float[]>{ new float[] {0, 0}, p1 };
+            var thetas = new [] { s[0]-(float)Math.PI/2, s[0]+s[1]- (float)Math.PI / 2 };
             var linkLengths = new[] {LINK_LENGTH_1, LINK_LENGTH_2};
 
-            Viewer.DrawLine(new []{-2.2, 1}, new []{2.2, 1});
+            Viewer.DrawLine(new []{-2.2f, 1}, new []{2.2f, 1});
 
             for (int i = 0; i < linkLengths.Length; ++i)
             {
-                double x = xys[i][0], y = xys[i][1], th = thetas[i], llen = linkLengths[i];
-                double l = 0, r = llen, t = .1,b = -.1;
+                float x = xys[i][0], y = xys[i][1], th = thetas[i], llen = linkLengths[i];
+                float l = 0, r = llen, t = .1f,b = -.1f;
                 var jTransform = new Rendering.Transform(new []{x, y}, th);
-                var link = Viewer.DrawPolygon(new List<double[]> { new[] { l, b }, new[] { l, t }, new[] { r, t }, new[] { r, b } });
+                var link = Viewer.DrawPolygon(new List<float[]> { new[] { l, b }, new[] { l, t }, new[] { r, t }, new[] { r, b } });
                 link.AddAttr(jTransform);
-                link.SetColor(0, .8, .8);
-                var circ = Viewer.DrawCircle(.1);
-                circ.SetColor(.8, .8, 0);
+                link.SetColor(0, .8f, .8f);
+                var circ = Viewer.DrawCircle(.1f);
+                circ.SetColor(.8f, .8f, 0);
                 circ.AddAttr(jTransform);
             }
 
@@ -99,17 +99,17 @@ namespace DeepQL.Gyms
         protected override Tensor GetObservation()
         {
             var s = State;
-            return new Tensor(new []{ Math.Cos(s[0]), Math.Sin(s[0]), Math.Cos(s[1]), Math.Sin(s[1]), s[2], s[3]}, ObservationSpace.Shape);
+            return new Tensor(new []{ (float)Math.Cos(s[0]), (float)Math.Sin(s[0]), (float)Math.Cos(s[1]), (float)Math.Sin(s[1]), s[2], s[3]}, ObservationSpace.Shape);
         }
 
         public override Tensor Reset()
         {
             State = new Tensor(new Shape(4));
-            State.FillWithRand(-1, -0.1, 0.1);
+            State.FillWithRand(-1, -0.1f, 0.1f);
             return GetObservation();
         }
 
-        public override bool Step(Tensor action, out Tensor observation, out double reward)
+        public override bool Step(Tensor action, out Tensor observation, out float reward)
         {
             var s = State;
             var a = (int)action[0];
@@ -117,16 +117,16 @@ namespace DeepQL.Gyms
 
             // Add noise to the force action
             if (TORQUE_NOISE_MAX > 0)
-                torque += Rng.NextDouble(-TORQUE_NOISE_MAX, TORQUE_NOISE_MAX);
+                torque += Rng.NextFloat(-TORQUE_NOISE_MAX, TORQUE_NOISE_MAX);
 
             // Now, augment the state with our force action so it can be passed to _dsdt
-            double[] sAugmented = s.GetValues().Concat(new []{torque}).ToArray();
+            float[] sAugmented = s.GetValues().Concat(new []{torque}).ToArray();
 
             var nsFull = Rk4(Dsdt, sAugmented, new [] { 0, DT });
             // only care about final timestep of integration returned by integrator
             //ns = ns[-1];
             //ns = ns[:4]  // omit action
-            var ns = new double[4];
+            var ns = new float[4];
             var lastRow = nsFull.GetLength(0) - 1;
             for (int n = 0; n < 4; ++n)
                 ns[n] = nsFull[lastRow, n];
@@ -136,13 +136,13 @@ namespace DeepQL.Gyms
             // self.s_continuous = ns_continuous[-1] // We only care about the state
             // at the ''final timestep'', self.dt
 
-            ns[0] = Wrap(ns[0], -Math.PI, Math.PI);
-            ns[1] = Wrap(ns[1], -Math.PI, Math.PI);
+            ns[0] = Wrap(ns[0], -(float)Math.PI, (float)Math.PI);
+            ns[1] = Wrap(ns[1], -(float)Math.PI, (float)Math.PI);
             ns[2] = Bound(ns[2], -MAX_VEL_1, MAX_VEL_1);
             ns[3] = Bound(ns[3], -MAX_VEL_2, MAX_VEL_2);
             State = new Tensor(ns, State.Shape);
             bool terminal = Terminal();
-            reward = terminal ? 0 : -1.0;
+            reward = terminal ? 0 : -1.0f;
             observation = GetObservation();
             return terminal;
         }
@@ -160,7 +160,7 @@ namespace DeepQL.Gyms
             return -Math.Cos(s[0]) - Math.Cos(s[1] + s[0]) > 1.0;
         }
 
-        private double[] Dsdt(double[] s_augmented, double t)
+        private float[] Dsdt(float[] s_augmented, float t)
         {
             var m1 = LINK_MASS_1;
             var m2 = LINK_MASS_2;
@@ -169,21 +169,21 @@ namespace DeepQL.Gyms
             var lc2 = LINK_COM_POS_2;
             var I1 = LINK_MOI;
             var I2 = LINK_MOI;
-            var g = 9.8;
+            var g = 9.8f;
             var a = s_augmented.Last();
             var s = s_augmented.Take(s_augmented.Length - 1).ToArray();
             var theta1 = s[0];
             var theta2 = s[1];
             var dtheta1 = s[2];
             var dtheta2 = s[3];
-            var d1 = m1 * lc1 * lc1 + m2 * (l1 * l1 + lc2 * lc2 + 2 * l1 * lc2 * Math.Cos(theta2)) + I1 + I2;
-            var d2 = m2 * (lc2 * lc2 + l1 * lc2 * Math.Cos(theta2)) + I2;
-            var phi2 = m2 * lc2 * g * Math.Cos(theta1 + theta2 - Math.PI / 2.0);
-            var phi1 = -m2 * l1 * lc2 * dtheta2 * dtheta2 * Math.Sin(theta2) -
-                       2 * m2 * l1 * lc2 * dtheta2 * dtheta1 * Math.Sin(theta2) +
-                       (m1 * lc1 + m2 * l1) * g * Math.Cos(theta1 - Math.PI / 2) + phi2;
+            var d1 = m1 * lc1 * lc1 + m2 * (l1 * l1 + lc2 * lc2 + 2 * l1 * lc2 * (float)Math.Cos(theta2)) + I1 + I2;
+            var d2 = m2 * (lc2 * lc2 + l1 * lc2 * (float)Math.Cos(theta2)) + I2;
+            var phi2 = m2 * lc2 * g * (float)Math.Cos(theta1 + theta2 - (float)Math.PI / 2.0);
+            var phi1 = -m2 * l1 * lc2 * dtheta2 * dtheta2 * (float)Math.Sin(theta2) -
+                       2 * m2 * l1 * lc2 * dtheta2 * dtheta1 * (float)Math.Sin(theta2) +
+                       (m1 * lc1 + m2 * l1) * g * (float)Math.Cos(theta1 - (float)Math.PI / 2) + phi2;
 
-            var ddtheta2 = 0.0;
+            var ddtheta2 = 0.0f;
 
             if (BookOrNips == "nips")
             {
@@ -193,14 +193,14 @@ namespace DeepQL.Gyms
             else
             {
                 // the following line is consistent with the java implementation and the book
-                ddtheta2 = (a + d2 / d1 * phi1 - m2 * l1 * lc2 * dtheta1 * dtheta1 * Math.Sin(theta2) - phi2) / (m2 * lc2 * lc2 + I2 - d2 * d2 / d1);
+                ddtheta2 = (a + d2 / d1 * phi1 - m2 * l1 * lc2 * dtheta1 * dtheta1 * (float)Math.Sin(theta2) - phi2) / (m2 * lc2 * lc2 + I2 - d2 * d2 / d1);
             }
 
             var ddtheta1 = -(d2 * ddtheta2 + phi1) / d1;
-            return new[] {dtheta1, dtheta2, ddtheta1, ddtheta2, 0.0};
+            return new float[] {dtheta1, dtheta2, ddtheta1, ddtheta2, 0.0f};
         }
 
-        private double Wrap(double x, double m, double M)
+        private float Wrap(float x, float m, float M)
         {
             /**
             :param x: a scalar
@@ -217,21 +217,21 @@ namespace DeepQL.Gyms
             return x;
         }
 
-        private double Bound(double x, double m, double M)
+        private float Bound(float x, float m, float M)
         {
             // bound x between min (m) and Max (M)
             return Math.Min(Math.Max(x, m), M);
         }
 
-        private double Bound(double x, double[] m)
+        private float Bound(float x, float[] m)
         {
             // bound x between min (m) and Max (M)
             return Math.Min(Math.Max(x, m[0]), m[1]);
         }
 
-        private delegate double[] Derivs(double[] s_augmented, double t);
+        private delegate float[] Derivs(float[] s_augmented, float t);
 
-        private double[,] Rk4(Derivs derivs, double[] y0, double[] t)
+        private float[,] Rk4(Derivs derivs, float[] y0, float[] t)
         {
             /**
             Integrate 1D or ND system of ODEs using 4-th order Runge-Kutta.
@@ -267,7 +267,7 @@ namespace DeepQL.Gyms
             **/
 
             var ny = y0.Length;
-            var yOut = new double[t.Length, ny];
+            var yOut = new float[t.Length, ny];
 
             for (int n = 0; n < ny; ++n)
                 yOut[0,n] = y0[n];
@@ -276,7 +276,7 @@ namespace DeepQL.Gyms
             {
                 var thisT = t[i];
                 var dt = t[i + 1] - thisT;
-                var dt2 = dt / 2.0;
+                var dt2 = dt / 2.0f;
 
                 for (int n = 0; n < ny; ++n)
                     y0[n] = yOut[i, n];
@@ -287,28 +287,28 @@ namespace DeepQL.Gyms
                 var k4 = derivs(y0.Zip(k3, (a, b) => a + dt * b).ToArray(), thisT + dt);
 
                 for (int n = 0; n < ny; ++n)
-                    yOut[i + 1, n] = y0[n] + dt / 6.0 * (k1[n] + 2 * k2[n] + 2 * k3[n] + k4[n]);
+                    yOut[i + 1, n] = y0[n] + dt / 6.0f * (k1[n] + 2 * k2[n] + 2 * k3[n] + k4[n]);
             }
 
             return yOut;
         }
 
-        private const double DT = .2;
+        private const float DT = .2f;
 
-        private const double LINK_LENGTH_1 = 1.0;  // [m]
-        private const double LINK_LENGTH_2 = 1.0;  // [m]
-        private const double LINK_MASS_1 = 1.0;  //: [kg] mass of link 1
-        private const double LINK_MASS_2 = 1.0;  //: [kg] mass of link 2
-        private const double LINK_COM_POS_1 = 0.5;  //: [m] position of the center of mass of link 1
-        private const double LINK_COM_POS_2 = 0.5;  //: [m] position of the center of mass of link 2
-        private const double LINK_MOI = 1.0;  //: moments of inertia for both links
+        private const float LINK_LENGTH_1 = 1.0f;  // [m]
+        private const float LINK_LENGTH_2 = 1.0f;  // [m]
+        private const float LINK_MASS_1 = 1.0f;  //: [kg] mass of link 1
+        private const float LINK_MASS_2 = 1.0f;  //: [kg] mass of link 2
+        private const float LINK_COM_POS_1 = 0.5f;  //: [m] position of the center of mass of link 1
+        private const float LINK_COM_POS_2 = 0.5f;  //: [m] position of the center of mass of link 2
+        private const float LINK_MOI = 1.0f;  //: moments of inertia for both links
 
-        private const double MAX_VEL_1 = 4 * Math.PI;
-        private const double MAX_VEL_2 = 9 * Math.PI;
+        private const float MAX_VEL_1 = 4 * (float)Math.PI;
+        private const float MAX_VEL_2 = 9 * (float)Math.PI;
 
-        private readonly double[] AVAIL_TORQUE = { -1.0, 0.0, 1.0 };
+        private readonly float[] AVAIL_TORQUE = { -1.0f, 0.0f, 1.0f };
 
-        private double TORQUE_NOISE_MAX = 0.0;
+        private float TORQUE_NOISE_MAX = 0.0f;
 
         //use dynamics equations from the nips paper or the book
         private string BookOrNips = "book";

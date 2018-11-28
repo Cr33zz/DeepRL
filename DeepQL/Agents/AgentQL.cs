@@ -18,7 +18,7 @@ namespace DeepQL.Agents
             return ValueFuncModel.GetOptimalAction(LastObservation);
         }
 
-        protected override void OnStep(int step, Tensor action, double reward, Tensor observation, bool done)
+        protected override void OnStep(int step, Tensor action, float reward, Tensor observation, bool done)
         {
             ValueFuncModel.OnStep(LastObservation, action, reward, observation, done);
         }

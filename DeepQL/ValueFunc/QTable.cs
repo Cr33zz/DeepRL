@@ -6,10 +6,10 @@ namespace DeepQL.ValueFunc
 {
     public class QTable : ValueFunctionModel
     {
-        public QTable(int numberOfStates, int numberOfActions, double learningRate, double discountFactor)
+        public QTable(int numberOfStates, int numberOfActions, float learningRate, float discountFactor)
             : base(new Shape(numberOfStates), numberOfActions, learningRate, discountFactor)
         {
-            Table = new double[numberOfStates, numberOfActions];
+            Table = new float[numberOfStates, numberOfActions];
         }
 
         public override Tensor GetOptimalAction(Tensor state)
@@ -19,7 +19,7 @@ namespace DeepQL.ValueFunc
             return action;
         }
 
-        public override void OnStep(Tensor state, Tensor action, double reward, Tensor nextState, bool done)
+        public override void OnStep(Tensor state, Tensor action, float reward, Tensor nextState, bool done)
         {
             int stateInt = (int)state[0];
             int actionInt = (int)action[0];
@@ -34,7 +34,7 @@ namespace DeepQL.ValueFunc
 
         private int BestActionBasedOnQTable(int state)
         {
-            double max = double.MinValue;
+            float max = float.MinValue;
             int bestAction = -1;
 
             for (int a = 0; a < Table.GetLength(1); ++a)
@@ -49,9 +49,9 @@ namespace DeepQL.ValueFunc
             return bestAction;
         }
 
-        private double GetMaxRewardBasedOnQTable(int state)
+        private float GetMaxRewardBasedOnQTable(int state)
         {
-            double max = double.MinValue;
+            float max = float.MinValue;
 
             for (int a = 0; a < Table.GetLength(1); ++a)
                 max = Math.Max(Table[state, a], max);
@@ -59,6 +59,6 @@ namespace DeepQL.ValueFunc
             return max;
         }
         
-        private readonly double[,] Table;
+        private readonly float[,] Table;
     }
 }

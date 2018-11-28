@@ -11,7 +11,7 @@ namespace DeepQL.Spaces
 
         public override Tensor Sample()
         {
-            return new Tensor(new double[] { GlobalRandom.Rng.Next(N) }, Shape);
+            return new Tensor(new float[] { GlobalRandom.Rng.Next(N) }, Shape);
         }
 
         public override bool Contains(Tensor state)

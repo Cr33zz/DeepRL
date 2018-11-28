@@ -55,7 +55,7 @@ namespace DeepQL.Tests
             Random random = new Random();
 
             for (int i = 0; i < count; ++i)
-                memory.Push(new Transition(new Tensor(new Shape(1)), new Tensor(new Shape(1)), random.NextDouble(), new Tensor(new Shape(1)), false));
+                memory.Push(new Transition(new Tensor(new Shape(1)), new Tensor(new Shape(1)), (float)random.NextDouble(), new Tensor(new Shape(1)), false));
         }
     }
 }

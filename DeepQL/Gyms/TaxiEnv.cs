@@ -66,7 +66,7 @@ namespace DeepQL.Gyms
                     int newCol = col;
                     int newPassIdx = passIdx;
 
-                    double reward = -1;
+                    float reward = -1;
                     bool done = false;
                     Point taxiLoc = new Point(row, col);
 
@@ -108,7 +108,7 @@ namespace DeepQL.Gyms
                     }
 
                     int newState = EncodeState(newRow, newCol, newPassIdx, destidx);
-                    AddTransition(state, a, 1.0, newState, reward, done);
+                    AddTransition(state, a, 1.0f, newState, reward, done);
                 }
             }
 

@@ -61,7 +61,7 @@ namespace DeepQL.Gyms
             return GetObservation();
         }
 
-        public override bool Step(Tensor action, out Tensor observation, out double reward)
+        public override bool Step(Tensor action, out Tensor observation, out float reward)
         {
             ACTION a = rgActions[(int)action[0]];
             reward = ale.Act(a);

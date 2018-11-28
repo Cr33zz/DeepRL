@@ -5,7 +5,7 @@ namespace DeepQL.Spaces
 {
     public class Box : Space
     {
-        public Box(double low, double high, Shape shape)
+        public Box(float low, float high, Shape shape)
             : base(shape)
         {
             Low = new Tensor(shape);
@@ -14,7 +14,7 @@ namespace DeepQL.Spaces
             High.FillWithValue(high);
         }
 
-        public Box(double[] low, double[] high, Shape shape)
+        public Box(float[] low, float[] high, Shape shape)
             : base(shape)
         {
             Low = new Tensor(low, shape);
@@ -25,7 +25,7 @@ namespace DeepQL.Spaces
         {
             var t = new Tensor(Shape);
             for (int i = 0; i < Shape.Length; ++i)
-                t.SetFlat(Low.GetFlat(i) + (High.GetFlat(i) - Low.GetFlat(i)) * GlobalRandom.Rng.NextDouble(), i);
+                t.SetFlat(Low.GetFlat(i) + (High.GetFlat(i) - Low.GetFlat(i)) * (float)GlobalRandom.Rng.NextDouble(), i);
             return t;
         }
 

@@ -39,8 +39,8 @@ namespace DeepQL.Gyms
             const int SCREEN_WIDTH = 600;
             const int SCREEN_HEIGHT = 400;
 
-            double world_width = max_position - min_position;
-            double scale = SCREEN_WIDTH / world_width;
+            float world_width = max_position - min_position;
+            float scale = SCREEN_WIDTH / world_width;
             const int carwidth = 40;
             const int carheight = 20;
 
@@ -55,37 +55,37 @@ namespace DeepQL.Gyms
                 track.SetLineWidth(4);
                 Viewer.AddGeom(track);
 
-                double clearance = 10;
+                float clearance = 10;
 
-                double l = -carwidth / 2, r = carwidth / 2, t = carheight, b = 0;
-                var car = new Rendering.FilledPolygon(new List<double[]> { new[] { l, b }, new[] { l, t }, new[] { r, t }, new[] { r, b } });
+                float l = -carwidth / 2, r = carwidth / 2, t = carheight, b = 0;
+                var car = new Rendering.FilledPolygon(new List<float[]> { new[] { l, b }, new[] { l, t }, new[] { r, t }, new[] { r, b } });
                 car.AddAttr(new Rendering.Transform(new[] { 0, clearance }));
                 CarTrans = new Rendering.Transform();
                 car.AddAttr(CarTrans);
                 Viewer.AddGeom(car);
-                var frontwheel = Rendering.MakeCircle(carheight / 2.5);
-                frontwheel.SetColor(.5, .5, .5);
+                var frontwheel = Rendering.MakeCircle(carheight / 2.5f);
+                frontwheel.SetColor(.5f, .5f, .5f);
                 frontwheel.AddAttr(new Rendering.Transform(new[] { carwidth / 4, clearance }));
                 frontwheel.AddAttr(CarTrans);
                 Viewer.AddGeom(frontwheel);
-                var backwheel = Rendering.MakeCircle(carheight / 2.5);
+                var backwheel = Rendering.MakeCircle(carheight / 2.5f);
                 backwheel.AddAttr(new Rendering.Transform(new[] { -carwidth / 4, clearance }));
                 backwheel.AddAttr(CarTrans);
-                backwheel.SetColor(.5, .5, .5);
+                backwheel.SetColor(.5f, .5f, .5f);
                 Viewer.AddGeom(backwheel);
-                double flagx = (goal_position - min_position) * scale;
-                double flagy1 = Height(goal_position) * scale;
-                double flagy2 = flagy1 + 50;
+                float flagx = (goal_position - min_position) * scale;
+                float flagy1 = Height(goal_position) * scale;
+                float flagy2 = flagy1 + 50;
                 var flagpole = new Rendering.Line(new[] { flagx, flagy1 }, new[] { flagx, flagy2 });
                 Viewer.AddGeom(flagpole);
-                var flag = new Rendering.FilledPolygon(new List<double[]>() { new[] { flagx, flagy2 }, new[] { flagx, flagy2 - 10 }, new[] { flagx + 25, flagy2 - 5 } });
-                flag.SetColor(.8, .8, 0);
+                var flag = new Rendering.FilledPolygon(new List<float[]>() { new[] { flagx, flagy2 }, new[] { flagx, flagy2 - 10 }, new[] { flagx + 25, flagy2 - 5 } });
+                flag.SetColor(.8f, .8f, 0);
                 Viewer.AddGeom(flag);
             }
 
-            double pos = State[0];
+            float pos = State[0];
             CarTrans.SetTranslation((pos - min_position) * scale, Height(pos) * scale);
-            CarTrans.SetRotation(Math.Cos(3 * pos));
+            CarTrans.SetRotation((float)Math.Cos(3 * pos));
 
             Viewer.Render();
 
@@ -94,17 +94,17 @@ namespace DeepQL.Gyms
 
         public override Tensor Reset()
         {
-            State = new Tensor(new[] { Rng.NextDouble(-0.6, -0.4), 0.0 }, ObservationSpace.Shape);
+            State = new Tensor(new[] { Rng.NextFloat(-0.6f, -0.4f), 0.0f }, ObservationSpace.Shape);
             return State.Clone();
         }
 
-        public override bool Step(Tensor action, out Tensor observation, out double reward)
+        public override bool Step(Tensor action, out Tensor observation, out float reward)
         {
-            double position = State[0];
-            double velocity = State[1];
-            double force = Math.Min(Math.Max(action[0], -1.0), 1.0);
+            float position = State[0];
+            float velocity = State[1];
+            float force = (float)Math.Min(Math.Max(action[0], -1.0), 1.0);
 
-            velocity += force * power - 0.0025 * Math.Cos(3 * position);
+            velocity += force * power - 0.0025f * (float)Math.Cos(3 * position);
             if (velocity > max_speed) velocity = max_speed;
             if (velocity < -max_speed) velocity = -max_speed;
             position += velocity;
@@ -116,8 +116,8 @@ namespace DeepQL.Gyms
 
             reward = 0;
             if (done)
-                reward = 100.0;
-            reward -= Math.Pow(action[0], 2) * 0.1;
+                reward = 100.0f;
+            reward -= (float)Math.Pow(action[0], 2) * 0.1f;
 
             State = new Tensor(new[] { position, velocity }, ObservationSpace.Shape);
 
@@ -132,20 +132,20 @@ namespace DeepQL.Gyms
             base.Dispose();
         }
 
-        private double Height(double xs)
+        private float Height(float xs)
         {
-            return Math.Sin(3 * xs) * .45 + .55;
+            return (float)Math.Sin(3 * xs) * .45f + .55f;
         }
 
         private Rendering.Viewer Viewer;
         private Rendering.Transform CarTrans;
 
-        private const double min_action = -1.0;
-        private const double max_action = 1.0;
-        private const double min_position = -1.2;
-        private const double max_position = 0.6;
-        private const double max_speed = 0.07;
-        private const double goal_position = 0.45; // was 0.5 in gym, 0.45 in Arnaud de Broissia's version
-        private const double power = 0.0015;
+        private const float min_action = -1.0f;
+        private const float max_action = 1.0f;
+        private const float min_position = -1.2f;
+        private const float max_position = 0.6f;
+        private const float max_speed = 0.07f;
+        private const float goal_position = 0.45f; // was 0.5 in gym, 0.45 in Arnaud de Broissia's version
+        private const float power = 0.0015f;
     }
 }

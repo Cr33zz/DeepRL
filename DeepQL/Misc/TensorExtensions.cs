@@ -16,7 +16,7 @@ namespace DeepQL
                 throw new Exception($"Invalid tensor length. Expected room for {screenData.Length} values.");
 
             for (int i = 0; i < screenData.Length; ++i)
-                t.SetFlat(screenData[i] / 128.0, i);
+                t.SetFlat(screenData[i] / 128.0f, i);
         }
     }
 }

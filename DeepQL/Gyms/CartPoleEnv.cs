@@ -46,25 +46,25 @@ namespace DeepQL.Gyms
     public class CartPoleEnv : Env
     {
         public CartPoleEnv()
-            : base(new Discrete(2), new Box(new double[] { -X_THRESHOLD * 2, double.MinValue, -THETA_THRESHOLD_RADIANS * 2, double.MinValue },
-                                            new double[] { X_THRESHOLD * 2, double.MaxValue, THETA_THRESHOLD_RADIANS * 2, double.MaxValue }, new Shape(4)))
+            : base(new Discrete(2), new Box(new float[] { -X_THRESHOLD * 2, float.MinValue, -THETA_THRESHOLD_RADIANS * 2, float.MinValue },
+                                            new float[] { X_THRESHOLD * 2, float.MaxValue, THETA_THRESHOLD_RADIANS * 2, float.MaxValue }, new Shape(4)))
         {
             Reset();
         }
 
-        public override bool Step(Tensor action, out Tensor observation, out double reward)
+        public override bool Step(Tensor action, out Tensor observation, out float reward)
         {
             //Debug.Assert(ActionSpace.Contains(action), "Invalid action");
-            double x = State[0];
-            double xDot = State[1];
-            double theta = State[2];
-            double thetaDot = State[3];
-            double force = action[0] == 1 ? FORCE_MAG : -FORCE_MAG;
-            double cosTheta = Math.Cos(theta);
-            double sinTheta = Math.Sin(theta);
-            double temp = (force + POLE_MASS_LENGTH * thetaDot * thetaDot * sinTheta) / TOTAL_MASS;
-            double thetaAcc = (GRAVITY * sinTheta - cosTheta * temp) / (LENGTH * (4.0 / 3.0 - MASS_POLE * cosTheta * cosTheta / TOTAL_MASS));
-            double xAcc = temp - POLE_MASS_LENGTH * thetaAcc * cosTheta / TOTAL_MASS;
+            float x = State[0];
+            float xDot = State[1];
+            float theta = State[2];
+            float thetaDot = State[3];
+            float force = action[0] == 1 ? FORCE_MAG : -FORCE_MAG;
+            float cosTheta = (float)Math.Cos(theta);
+            float sinTheta = (float)Math.Sin(theta);
+            float temp = (force + POLE_MASS_LENGTH * thetaDot * thetaDot * sinTheta) / TOTAL_MASS;
+            float thetaAcc = (GRAVITY * sinTheta - cosTheta * temp) / (LENGTH * (4.0f / 3.0f - MASS_POLE * cosTheta * cosTheta / TOTAL_MASS));
+            float xAcc = temp - POLE_MASS_LENGTH * thetaAcc * cosTheta / TOTAL_MASS;
 
             if (KINEMATICS_INTEGRATOR == EKinematicIntegrator.Euler)
             {
@@ -86,20 +86,20 @@ namespace DeepQL.Gyms
 
             if (!done)
             {
-                reward = 1.0;
+                reward = 1.0f;
             }
             else if (StepsBeyondDone == -1)
             {
                 // Pole just fell!
                 StepsBeyondDone = 0;
-                reward = 1.0;
+                reward = 1.0f;
             }
             else
             {
                 if (StepsBeyondDone == 0)
                     Console.WriteLine("You are calling 'Step()' even though this environment has already returned done = True. You should always call 'Reset()' once you receive 'done = True' -- any further steps are undefined behavior.");
                 ++StepsBeyondDone;
-                reward = 0.0;
+                reward = 0.0f;
             }
 
             observation = GetObservation();
@@ -109,7 +109,7 @@ namespace DeepQL.Gyms
         public override Tensor Reset()
         {
             State = new Tensor(ObservationSpace.Shape);
-            State.FillWithRand(-1, -0.05, 0.05);
+            State.FillWithRand(-1, -0.05f, 0.05f);
             StepsBeyondDone = -1;
             return GetObservation();
         }
@@ -119,23 +119,23 @@ namespace DeepQL.Gyms
             const int SCREEN_WIDTH = 600;
             const int SCREEN_HEIGHT = 400;
 
-            double worldWidth = X_THRESHOLD * 2;
-            double scale = SCREEN_WIDTH / worldWidth;
-            double cartY = 100; // TOP OF CART
-            double poleWidth = 10.0;
-            double poleLen = scale * (2 * LENGTH);
-            double cartWidth = 50.0;
-            double cartHeight = 30.0;
+            float worldWidth = X_THRESHOLD * 2;
+            float scale = SCREEN_WIDTH / worldWidth;
+            float cartY = 100; // TOP OF CART
+            float poleWidth = 10.0f;
+            float poleLen = scale * (2 * LENGTH);
+            float cartWidth = 50.0f;
+            float cartHeight = 30.0f;
 
             if (Viewer == null)
             {
                 Viewer = new Rendering.Viewer(SCREEN_WIDTH, SCREEN_HEIGHT);
-                double l = -cartWidth / 2;
-                double r = cartWidth / 2;
-                double t = cartHeight / 2;
-                double b = -cartHeight / 2;
-                double axleOffset = cartHeight / 4.0;
-                var cart = new Rendering.FilledPolygon(new List<double[]> { new[] { l, b }, new[] { l, t }, new[] { r, t }, new[] { r, b } });
+                float l = -cartWidth / 2;
+                float r = cartWidth / 2;
+                float t = cartHeight / 2;
+                float b = -cartHeight / 2;
+                float axleOffset = cartHeight / 4.0f;
+                var cart = new Rendering.FilledPolygon(new List<float[]> { new[] { l, b }, new[] { l, t }, new[] { r, t }, new[] { r, b } });
                 CartTrans = new Rendering.Transform();
                 cart.AddAttr(CartTrans);
                 Viewer.AddGeom(cart);
@@ -143,8 +143,8 @@ namespace DeepQL.Gyms
                 r = poleWidth / 2;
                 t = poleLen - poleWidth / 2;
                 b = -poleWidth / 2;
-                Pole = new Rendering.FilledPolygon(new List<double[]> { new[] { l, b }, new[] { l, t }, new[] { r, t }, new[] { r, b } });
-                Pole.SetColor(.8, .6, .4);
+                Pole = new Rendering.FilledPolygon(new List<float[]> { new[] { l, b }, new[] { l, t }, new[] { r, t }, new[] { r, b } });
+                Pole.SetColor(.8f, .6f, .4f);
                 PoleTrans = new Rendering.Transform(new[] {0, axleOffset});
                 Pole.AddAttr(PoleTrans);
                 Pole.AddAttr(CartTrans);
@@ -152,7 +152,7 @@ namespace DeepQL.Gyms
                 Axle = Rendering.MakeCircle(poleWidth / 2);
                 Axle.AddAttr(PoleTrans);
                 Axle.AddAttr(CartTrans);
-                Axle.SetColor(.5, .5, .8);
+                Axle.SetColor(.5f, .5f, .8f);
                 Viewer.AddGeom(Axle);
                 Track = new Rendering.Line(new [] { 0, cartY }, new [] { SCREEN_WIDTH, cartY });
                 Track.SetColor(0, 0, 0);
@@ -164,11 +164,11 @@ namespace DeepQL.Gyms
 
             {
                 // Edit the pole polygon vertex
-                double l = -poleWidth / 2, r = poleWidth / 2, t = poleLen - poleWidth / 2, b = poleWidth / 2;
-                Pole.Vertices = new List<double[]> {new[] {l, b}, new[] {l, t}, new[] {r, t}, new[] {r, b}};
+                float l = -poleWidth / 2, r = poleWidth / 2, t = poleLen - poleWidth / 2, b = poleWidth / 2;
+                Pole.Vertices = new List<float[]> {new[] {l, b}, new[] {l, t}, new[] {r, t}, new[] {r, b}};
             }
 
-            var cartX = State[0] * scale + SCREEN_WIDTH / 2.0; // MIDDLE OF CART
+            var cartX = State[0] * scale + SCREEN_WIDTH / 2.0f; // MIDDLE OF CART
             CartTrans.SetTranslation(cartX, cartY);
             PoleTrans.SetRotation(-State[2]);
 
@@ -190,19 +190,19 @@ namespace DeepQL.Gyms
             SemiImplicitEuler,
         }
 
-        private const double GRAVITY = 9.8;
-        private const double MASS_CART = 1.0;
-        private const double MASS_POLE = 0.1;
-        private const double TOTAL_MASS = (MASS_POLE + MASS_CART);
-        private const double LENGTH = 0.5; // actually half the pole's length
-        private const double POLE_MASS_LENGTH = (MASS_POLE * LENGTH);
-        private const double FORCE_MAG = 10.0;
-        private const double TAU = 0.02;  // seconds between state updates
+        private const float GRAVITY = 9.8f;
+        private const float MASS_CART = 1.0f;
+        private const float MASS_POLE = 0.1f;
+        private const float TOTAL_MASS = (MASS_POLE + MASS_CART);
+        private const float LENGTH = 0.5f; // actually half the pole's length
+        private const float POLE_MASS_LENGTH = (MASS_POLE * LENGTH);
+        private const float FORCE_MAG = 10.0f;
+        private const float TAU = 0.02f;  // seconds between state updates
         private const EKinematicIntegrator KINEMATICS_INTEGRATOR = EKinematicIntegrator.Euler;
 
         // Angle at which to fail the episode
-        private const double THETA_THRESHOLD_RADIANS = 12 * 2 * Math.PI / 360;
-        private const double X_THRESHOLD = 2.4;
+        private const float THETA_THRESHOLD_RADIANS = 12 * 2 * (float)Math.PI / 360;
+        private const float X_THRESHOLD = 2.4f;
 
         private Rendering.Viewer Viewer;
         private Rendering.FilledPolygon Pole;

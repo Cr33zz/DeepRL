@@ -4,7 +4,7 @@ namespace DeepQL
 {
     public class Transition
     {
-        public Transition(Tensor state, Tensor action, double reward, Tensor nextState, bool done)
+        public Transition(Tensor state, Tensor action, float reward, Tensor nextState, bool done)
         {
             State = state;
             Action = action;
@@ -16,7 +16,7 @@ namespace DeepQL
         public readonly Tensor State;
         public readonly Tensor Action;
         public readonly Tensor NextState;
-        public readonly double Reward;
+        public readonly float Reward;
         public readonly bool Done;
     }
 }

@@ -40,7 +40,7 @@ namespace DeepQL.Gyms
             world = new b2World(new b2Vec2(0, -10));
 
             // useful range is -1 .. +1, but spikes can be higher
-            ObservationSpace = new Box(double.NegativeInfinity, double.PositiveInfinity, new Shape(8));
+            ObservationSpace = new Box(float.NegativeInfinity, float.PositiveInfinity, new Shape(8));
 
             if (continuous)
             {
@@ -90,7 +90,7 @@ namespace DeepQL.Gyms
                         var customData = (obj.GetUserData() as CustomBodyData);
                         var trans = Utils.b2Mul(xform, shape.m_p);
 
-                        var t = new Rendering.Transform(new double[] { trans[0], trans[1] });
+                        var t = new Rendering.Transform(new float[] { trans[0], trans[1] });
                         Viewer.DrawCircle(shape.m_radius, 20).SetColor(customData.Color1.x, customData.Color1.y, customData.Color1.z).AddAttr(t);
                         Viewer.DrawCircle(shape.m_radius, 20, false).SetColor(customData.Color2.x, customData.Color2.y, customData.Color2.z).SetLineWidth(2).AddAttr(t);
                     }
@@ -99,7 +99,7 @@ namespace DeepQL.Gyms
                         var shape = f.GetShape();
                         var customData = (obj.GetUserData() as CustomBodyData);
 
-                        var path = shape.GetVertices().Select(v => { var trans = Utils.b2Mul(xform, v); return new double[] { trans[0], trans[1] }; }).ToList();
+                        var path = shape.GetVertices().Select(v => { var trans = Utils.b2Mul(xform, v); return new float[] { trans[0], trans[1] }; }).ToList();
                         Viewer.DrawPolygon(path).SetColor(customData.Color1.x, customData.Color1.y, customData.Color1.z);
                         path.Add(path[0]);
                         Viewer.DrawPolyline(path).SetColor(customData.Color2.x, customData.Color2.y, customData.Color2.z).SetLineWidth(2);
@@ -112,8 +112,8 @@ namespace DeepQL.Gyms
             {
                 var flagy1 = helipad_y;
                 var flagy2 = flagy1 + 50 / SCALE;
-                Viewer.DrawPolyline(new List<double[]> { new double[] {x, flagy1}, new double[] {x, flagy2}}).SetColor(1, 1, 1);
-                Viewer.DrawPolygon(new List<double[]> { new double[] {x, flagy2}, new double[] {x, flagy2-10/SCALE}, new double[] {x+25/SCALE, flagy2-5/SCALE}}).SetColor(0.8, 0.8, 0);
+                Viewer.DrawPolyline(new List<float[]> { new float[] {x, flagy1}, new float[] {x, flagy2}}).SetColor(1, 1, 1);
+                Viewer.DrawPolygon(new List<float[]> { new float[] {x, flagy2}, new float[] {x, flagy2-10/SCALE}, new float[] {x+25/SCALE, flagy2-5/SCALE}}).SetColor(0.8f, 0.8f, 0);
             }
 
             Viewer.Render();
@@ -152,10 +152,10 @@ namespace DeepQL.Gyms
             sky_polys.Clear();
             for (int i = 0; i < CHUNKS - 1; ++i)
             {
-                var p1 = new double[] {chunk_x[i], smooth_y[i]};
-                var p2 = new double[] {chunk_x[i + 1], smooth_y[i + 1]};
+                var p1 = new float[] {chunk_x[i], smooth_y[i]};
+                var p2 = new float[] {chunk_x[i + 1], smooth_y[i + 1]};
                 moon.CreateFixture(new b2FixtureDef(){shape = new b2EdgeShape().Set(new b2Vec2((float)p1[0], (float)p1[1]), new b2Vec2((float)p2[0], (float)p2[1])), density = 0, friction = 0.1f});
-                sky_polys.Add(new List<double[]>{ p1, p2, new[] {p2[0], H}, new[] {p1[0], H}} );
+                sky_polys.Add(new List<float[]>{ p1, p2, new[] {p2[0], H}, new[] {p1[0], H}} );
             }
 
             moon.SetUserData(new CustomBodyData() { Color1 = new b2Vec3(0,0,0), Color2 = new b2Vec3(0, 0, 0) });
@@ -171,7 +171,7 @@ namespace DeepQL.Gyms
                                                  restitution = 0.0f} // 0.99 bouncy
                                              );
             lander.SetUserData(new CustomBodyData() { Color1 = new b2Vec3(0.5f, 0.4f, 0.9f), Color2 = new b2Vec3(0.3f, 0.3f, 0.5f) });
-            lander.ApplyForceToCenter(new b2Vec2((float)Rng.NextDouble(-INITIAL_RANDOM, INITIAL_RANDOM), (float)Rng.NextDouble(-INITIAL_RANDOM, INITIAL_RANDOM)), true);
+            lander.ApplyForceToCenter(new b2Vec2((float)Rng.NextFloat(-INITIAL_RANDOM, INITIAL_RANDOM), (float)Rng.NextFloat(-INITIAL_RANDOM, INITIAL_RANDOM)), true);
 
             legs.Clear();
             foreach (int i in new[] {-1, +1})
@@ -220,7 +220,7 @@ namespace DeepQL.Gyms
             drawlist = new List<b2Body>{lander};
             drawlist = drawlist.Concat(legs).ToList();
 
-            Step(continuous ? new Tensor(new[] { 0.0, 0.0}, new Shape(2)) : new Tensor(new[] { 0.0 }, new Shape(1)), out var observation, out var reward);
+            Step(continuous ? new Tensor(new[] { 0.0f, 0.0f}, new Shape(2)) : new Tensor(new[] { 0.0f }, new Shape(1)), out var observation, out var reward);
 
             return observation;
         }
@@ -254,7 +254,7 @@ namespace DeepQL.Gyms
             }
         }
 
-        public override bool Step(Tensor action, out Tensor observation, out double reward)
+        public override bool Step(Tensor action, out Tensor observation, out float reward)
         {
             if (continuous)
                 action = action.Clipped(-1, +1);
@@ -264,7 +264,7 @@ namespace DeepQL.Gyms
             // Engines
             var tip = new[] {(float)Math.Sin(lander.GetAngle()), (float)Math.Cos(lander.GetAngle())};
             var side = new[] {-tip[1], tip[0]};
-            var dispersion = Enumerable.Range(0, 2).Select(i => (float)Rng.NextDouble(-1.0, +1.0) / SCALE).ToArray();
+            var dispersion = Enumerable.Range(0, 2).Select(i => (float)Rng.NextFloat(-1.0f, +1.0f) / SCALE).ToArray();
 
             var m_power = 0.0f;
             if ((continuous && action[0] > 0.0) || (!continuous && action[0] == 2))
@@ -272,7 +272,7 @@ namespace DeepQL.Gyms
                 // Main engine
                 if (continuous)
                 {
-                    m_power = (float) (Neuro.Tools.Clip(action[0], 0.0, 1.0) + 1.0) * 0.5f; // 0.5..1.0;
+                    m_power = (float) (Neuro.Tools.Clip(action[0], 0.0f, 1.0f) + 1.0) * 0.5f; // 0.5..1.0;
                     Debug.Assert(m_power >= 0.5f && m_power <= 1.0f);
                 }
                 else
@@ -294,7 +294,7 @@ namespace DeepQL.Gyms
                 if (continuous)
                 {
                     direction = Neuro.Tools.Sign(action[1]);
-                    s_power = (float)Neuro.Tools.Clip(Math.Abs(action[1]), 0.5, 1.0);
+                    s_power = (float)Neuro.Tools.Clip(Math.Abs(action[1]), 0.5f, 1.0f);
                     Debug.Assert(s_power >= 0.5 && s_power <= 1.0);
                 }
                 else
@@ -317,23 +317,23 @@ namespace DeepQL.Gyms
             var pos = lander.GetPosition();
             var vel = lander.GetLinearVelocity();
 
-            var state = new double[]
+            var state = new float[]
             {
                 (pos.x - VIEWPORT_W / SCALE / 2) / (VIEWPORT_W / SCALE / 2),
                 (pos.y - (helipad_y + LEG_DOWN / SCALE)) / (VIEWPORT_H / SCALE / 2),
                 vel.x * (VIEWPORT_W / SCALE / 2) / FPS,
                 vel.y * (VIEWPORT_H / SCALE / 2) / FPS,
                 lander.GetAngle(),
-                20.0 * lander.GetAngularVelocity() / FPS,
-                (legs[0].GetUserData() as CustomBodyData).GroundContact ? 1.0 : 0.0,
-                (legs[1].GetUserData() as CustomBodyData).GroundContact ? 1.0 : 0.0
+                20.0f * lander.GetAngularVelocity() / FPS,
+                (legs[0].GetUserData() as CustomBodyData).GroundContact ? 1.0f : 0.0f,
+                (legs[1].GetUserData() as CustomBodyData).GroundContact ? 1.0f : 0.0f
             };
             Debug.Assert(state.Length == 8);
 
             reward = 0;
-            var shaping = -100 * Math.Sqrt(state[0] * state[0] + state[1] * state[1])
-                          - 100 * Math.Sqrt(state[2] * state[2] + state[3] * state[3])
-                          - 100 * Math.Abs(state[4]) + 10 * state[6] + 10 * state[7];   // And ten points for legs contact, the idea is if you
+            var shaping = -100 * (float)Math.Sqrt(state[0] * state[0] + state[1] * state[1])
+                          - 100 * (float)Math.Sqrt(state[2] * state[2] + state[3] * state[3])
+                          - 100 * (float)Math.Abs(state[4]) + 10 * state[6] + 10 * state[7];   // And ten points for legs contact, the idea is if you
                                                                                         // lose contact again after landing, you get negative reward
             if (!float.IsNaN(prev_shaping))
                 reward = shaping - prev_shaping;
@@ -413,12 +413,12 @@ namespace DeepQL.Gyms
         private List<b2Body> particles = new List<b2Body>();
         private b2Body lander;
         private bool game_over;
-        //private double prev_reward;
+        //private float prev_reward;
         private float prev_shaping;
         private float helipad_x1;
         private float helipad_x2;
         private float helipad_y;
-        private readonly List<List<double[]>> sky_polys = new List<List<double[]>>();
+        private readonly List<List<float[]>> sky_polys = new List<List<float[]>>();
         private List<b2Body> drawlist = new List<b2Body>();
         private ContactDetector contact_detector;
 

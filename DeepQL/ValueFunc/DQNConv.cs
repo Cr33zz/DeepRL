@@ -8,7 +8,7 @@ namespace DeepQL.ValueFunc
 {
     public class DQNConv : DQN
     {
-        public DQNConv(Shape inputShape, int numberOfActions, double learningRate, double discountFactor, int temporalDataSize = 4)
+        public DQNConv(Shape inputShape, int numberOfActions, float learningRate, float discountFactor, int temporalDataSize = 4)
             :base(inputShape, numberOfActions, learningRate, discountFactor)
         {
             Model = new NeuralNetwork("DQNConv");
@@ -22,7 +22,7 @@ namespace DeepQL.ValueFunc
             TemporalDataSize = temporalDataSize;
         }
 
-        public override void OnStep(Tensor state, Tensor action, double reward, Tensor nextState, bool done)
+        public override void OnStep(Tensor state, Tensor action, float reward, Tensor nextState, bool done)
         {
             UpdateTemporalData(state);
             //Memory.Push(new Transition(Tensor.Merge(TemporalData, 4), action, reward, nextState, done));

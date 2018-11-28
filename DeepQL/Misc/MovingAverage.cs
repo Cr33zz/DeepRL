@@ -11,7 +11,7 @@ namespace DeepQL.Misc
             N = n;
         }
 
-        public void Add(double value)
+        public void Add(float value)
         {
             if (Values.Count == N)
                 Values.Dequeue();
@@ -19,9 +19,9 @@ namespace DeepQL.Misc
             Values.Enqueue(value);
         }
 
-        public double Avg => Values.Sum() / Values.Count;
+        public float Avg => Values.Sum() / Values.Count;
 
-        private Queue<double> Values = new Queue<double>();
+        private Queue<float> Values = new Queue<float>();
         private readonly int N;
     }
 }

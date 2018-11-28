@@ -13,16 +13,16 @@ namespace DeepQL.Environments
         }
 
         // Returns true when end state has been reached
-        public abstract bool Step(Tensor action, out Tensor observation, out double reward);
+        public abstract bool Step(Tensor action, out Tensor observation, out float reward);
         public abstract Tensor Reset();
         public abstract byte[] Render(bool toRgbArray = false);
 
         public virtual void Seed(int seed = 0) { Rng = seed > 0 ? new Random(seed) : new Random(); }
         public virtual void Dispose() { }
 
-        public bool Step(int action, out Tensor observation, out double reward)
+        public bool Step(int action, out Tensor observation, out float reward)
         {
-            return Step(new Tensor(new double[] {action}, new Shape(1)), out observation, out reward);
+            return Step(new Tensor(new float[] {action}, new Shape(1)), out observation, out reward);
         }
 
         public Space ActionSpace { get; protected set; }

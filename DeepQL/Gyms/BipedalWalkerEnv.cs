@@ -45,8 +45,8 @@ namespace DeepQL.Gyms
         }
 
         protected BipedalWalkerEnv(bool hardcore)
-            : base(new Box(new[] { -1.0, -1.0, -1.0, -1.0 }, new[] { 1.0, 1.0, 1.0, 1.0 }, new Shape(4)),
-                   new Box(double.NegativeInfinity, double.PositiveInfinity, new Shape(24)))
+            : base(new Box(new[] { -1.0f, -1.0f, -1.0f, -1.0f }, new[] { 1.0f, 1.0f, 1.0f, 1.0f }, new Shape(4)),
+                   new Box(float.NegativeInfinity, float.PositiveInfinity, new Shape(24)))
         {
             this.hardcore = hardcore;
             contactDetector = new ContactDetector(this);
@@ -93,10 +93,10 @@ namespace DeepQL.Gyms
                 Viewer = new Rendering.Viewer(VIEWPORT_W, VIEWPORT_H);
             Viewer.SetBounds(scroll, VIEWPORT_W / SCALE + scroll, 0, VIEWPORT_H / SCALE);
 
-            Viewer.DrawPolygon(new List<double[]>{ new double[] {scroll, 0},
-                                                   new double[] {scroll + VIEWPORT_W / SCALE, 0},
-                                                   new double[] {scroll + VIEWPORT_W / SCALE, VIEWPORT_H / SCALE},
-                                                   new double[] {scroll, VIEWPORT_H / SCALE} }).SetColor(0.9, 0.9, 1.0);
+            Viewer.DrawPolygon(new List<float[]>{ new float[] {scroll, 0},
+                                                   new float[] {scroll + VIEWPORT_W / SCALE, 0},
+                                                   new float[] {scroll + VIEWPORT_W / SCALE, VIEWPORT_H / SCALE},
+                                                   new float[] {scroll, VIEWPORT_H / SCALE} }).SetColor(0.9f, 0.9f, 1.0f);
 
             foreach (var cloud_data in cloud_poly)
             {
@@ -124,7 +124,7 @@ namespace DeepQL.Gyms
             if (i < 2 * lidar.Length)
             {
                 var l = i < lidar.Length ? lidar[i] : lidar[2 * lidar.Length - i - 1];
-                Viewer.DrawPolyline(new List<double[]> { new double[] { l.P1.x, l.P1.y }, new double[] { l.P2.x, l.P2.y } }).SetColor(1, 0, 0).SetLineWidth(1);
+                Viewer.DrawPolyline(new List<float[]> { new float[] { l.P1.x, l.P1.y }, new float[] { l.P2.x, l.P2.y } }).SetColor(1, 0, 0).SetLineWidth(1);
             }
 
             foreach (var obj in drawlist)
@@ -139,7 +139,7 @@ namespace DeepQL.Gyms
                         var customData = (obj.GetUserData() as CustomBodyData);
                         var trans = Utils.b2Mul(xform, shape.m_p);
 
-                        var t = new Rendering.Transform(new double[] { trans[0], trans[1] });
+                        var t = new Rendering.Transform(new float[] { trans[0], trans[1] });
                         Viewer.DrawCircle(shape.m_radius, 30).SetColor(customData.Color1.x, customData.Color1.y, customData.Color1.z).AddAttr(t);
                         Viewer.DrawCircle(shape.m_radius, 30, false).SetColor(customData.Color2.x, customData.Color2.y, customData.Color2.z).SetLineWidth(2).AddAttr(t);
                     }
@@ -148,7 +148,7 @@ namespace DeepQL.Gyms
                         var shape = f.GetShape();
                         var customData = (obj.GetUserData() as CustomBodyData);
 
-                        var path = shape.GetVertices().Select(v => { var trans = Utils.b2Mul(xform, v); return new double[] { trans[0], trans[1] };}).ToList();
+                        var path = shape.GetVertices().Select(v => { var trans = Utils.b2Mul(xform, v); return new float[] { trans[0], trans[1] };}).ToList();
                         Viewer.DrawPolygon(path).SetColor(customData.Color1.x, customData.Color1.y, customData.Color1.z);
                         path.Add(path[0]);
                         Viewer.DrawPolyline(path).SetColor(customData.Color2.x, customData.Color2.y, customData.Color2.z).SetLineWidth(2);
@@ -160,9 +160,9 @@ namespace DeepQL.Gyms
             var flagy2 = flagy1 + 50 / SCALE;
             var x = TERRAIN_STEP * 3;
 
-            Viewer.DrawPolyline(new List<double[]>{new double[] {x, flagy1}, new double[] { x, flagy2 }}).SetColor(0,0,0).SetLineWidth(2);
-            var flagVert = new List<double[]>{ new double[] { x, flagy2 }, new double[] {x, flagy2 - 10 / SCALE}, new double[] { x + 25 / SCALE, flagy2 - 5 / SCALE }};
-            Viewer.DrawPolygon(flagVert).SetColor(0.9, 0.2, 0);
+            Viewer.DrawPolyline(new List<float[]>{new float[] {x, flagy1}, new float[] { x, flagy2 }}).SetColor(0,0,0).SetLineWidth(2);
+            var flagVert = new List<float[]>{ new float[] { x, flagy2 }, new float[] {x, flagy2 - 10 / SCALE}, new float[] { x + 25 / SCALE, flagy2 - 5 / SCALE }};
+            Viewer.DrawPolygon(flagVert).SetColor(0.9f, 0.2f, 0);
             flagVert.Add(flagVert[0]);
             Viewer.DrawPolyline(flagVert).SetColor(0, 0, 0).SetLineWidth(2);
 
@@ -189,7 +189,7 @@ namespace DeepQL.Gyms
             var init_y = TERRAIN_HEIGHT + 2.1f * LEG_H;
             hull = World.CreateDynamicBody(new b2Vec2(init_x, init_y), 0, HULL_FD);
             hull.SetUserData(new CustomBodyData() { Color1 = new b2Vec3(0.5f, 0.4f, 0.9f), Color2 = new b2Vec3(0.3f, 0.3f, 0.5f) });
-            hull.ApplyForce(new b2Vec2((float)Rng.NextDouble(-INITIAL_RANDOM, INITIAL_RANDOM), 0), hull.GetWorldCenter(), true);
+            hull.ApplyForce(new b2Vec2((float)Rng.NextFloat(-INITIAL_RANDOM, INITIAL_RANDOM), 0), hull.GetWorldCenter(), true);
 
             foreach (float i in new[] {-1, +1})
             {
@@ -236,7 +236,7 @@ namespace DeepQL.Gyms
             for (int i = 0; i < lidar.Length; ++i)
                 lidar[i] = new LidarCallback();
 
-            Step(new Tensor(new[] {0.0, 0.0, 0.0, 0.0}, ActionSpace.Shape), out var observation, out var reward);
+            Step(new Tensor(new[] {0.0f, 0.0f, 0.0f, 0.0f}, ActionSpace.Shape), out var observation, out var reward);
 
             return observation;
 
@@ -245,7 +245,7 @@ namespace DeepQL.Gyms
         private class LidarCallback : b2RayCastCallback
         {
             public b2Vec2 P1, P2;
-            public double Fraction;
+            public float Fraction;
 
             public override float ReportFixture(b2Fixture fixture, b2Vec2 point, b2Vec2 normal, float fraction)
             {
@@ -258,7 +258,7 @@ namespace DeepQL.Gyms
             }
         }
 
-        public override bool Step(Tensor action, out Tensor observation, out double reward)
+        public override bool Step(Tensor action, out Tensor observation, out float reward)
         {
             // hull.ApplyForceToCenter((0, 20), True) -- Uncomment this to receive a bit of stability help
             var control_speed = false;  // Should be easier as well
@@ -299,19 +299,19 @@ namespace DeepQL.Gyms
             var tmp = new []
             {
                 hull.GetAngle(), // Normal angles up to 0.5 here, but sure more is possible.
-                2.0 * hull.GetAngularVelocity() / FPS,
-                0.3 * vel.x * (VIEWPORT_W / SCALE) / FPS, // Normalized to get -1..1 range
-                0.3 * vel.y * (VIEWPORT_H / SCALE) / FPS,
+                2.0f * hull.GetAngularVelocity() / FPS,
+                0.3f * vel.x * (VIEWPORT_W / SCALE) / FPS, // Normalized to get -1..1 range
+                0.3f * vel.y * (VIEWPORT_H / SCALE) / FPS,
                 joints[0].GetJointAngle(), // This will give 1.1 on high up, but it's still OK (and there should be spikes on hiting the ground, that's normal too)
                 joints[0].GetJointSpeed() / SPEED_HIP,
-                joints[1].GetJointAngle() + 1.0,
+                joints[1].GetJointAngle() + 1.0f,
                 joints[1].GetJointSpeed() / SPEED_KNEE,
-                (legs[1].GetUserData() as CustomBodyData).GroundContact ? 1.0 : 0.0,
+                (legs[1].GetUserData() as CustomBodyData).GroundContact ? 1.0f : 0.0f,
                 joints[2].GetJointAngle(),
                 joints[2].GetJointSpeed() / SPEED_HIP,
-                joints[3].GetJointAngle() + 1.0,
+                joints[3].GetJointAngle() + 1.0f,
                 joints[3].GetJointSpeed() / SPEED_KNEE,
-                (legs[3].GetUserData() as CustomBodyData).GroundContact ? 1.0 : 0.0
+                (legs[3].GetUserData() as CustomBodyData).GroundContact ? 1.0f : 0.0f
             };
 
             var stateVal = tmp.Concat(lidar.Select(l => l.Fraction).ToArray()).ToArray();
@@ -329,7 +329,7 @@ namespace DeepQL.Gyms
             prev_shaping = shaping;
 
             foreach (var a in action.GetValues())
-                reward -= 0.00035 * MOTORS_TORQUE * Neuro.Tools.Clip(System.Math.Abs(a), 0, 1);
+                reward -= 0.00035f * MOTORS_TORQUE * Neuro.Tools.Clip(System.Math.Abs(a), 0, 1);
             // normalized to about -50.0 using heuristic, more optimal agent should spend less
 
             bool done = false;
@@ -383,7 +383,7 @@ namespace DeepQL.Gyms
                 {
                     velocity = 0.8f * velocity + 0.01f * Neuro.Tools.Sign(TERRAIN_HEIGHT - y);
                     if (i > TERRAIN_STARTPAD)
-                        velocity += (float)Rng.NextDouble(-1, 1) / SCALE;   //1
+                        velocity += (float)Rng.NextFloat(-1, 1) / SCALE;   //1
                     y += velocity;
                 }
                 else if (state == PIT && oneshot)
@@ -496,14 +496,14 @@ namespace DeepQL.Gyms
                 t.SetUserData(new CustomBodyData() { Color1 = color, Color2 = color });
                 terrain.Add(t);
                 color = new b2Vec3(0.4f, 0.6f, 0.3f);
-                var poly_extended = new List<double[]>
+                var poly_extended = new List<float[]>
                 {
-                    new double[] { poly[0].x, poly[0].y },
-                    new double[] { poly[1].x, poly[1].y },
-                    new double[] { poly[1].x, 0 },
-                    new double[] { poly[0].x, 0 }
+                    new float[] { poly[0].x, poly[0].y },
+                    new float[] { poly[1].x, poly[1].y },
+                    new float[] { poly[1].x, 0 },
+                    new float[] { poly[0].x, 0 }
                 };
-                terrain_poly.Add(new Tuple<List<double[]>, b2Vec3> (poly_extended, color));
+                terrain_poly.Add(new Tuple<List<float[]>, b2Vec3> (poly_extended, color));
             }
 
             terrain.Reverse();
@@ -515,14 +515,14 @@ namespace DeepQL.Gyms
             cloud_poly.Clear();
             for (int i = 0; i < TERRAIN_LENGTH; ++i)
             {
-                var x = Rng.NextDouble(0, TERRAIN_LENGTH) * TERRAIN_STEP;
+                var x = Rng.NextFloat(0, TERRAIN_LENGTH) * TERRAIN_STEP;
                 var y = VIEWPORT_H / SCALE * 3 / 4;
-                var poly = Enumerable.Range(0, 5).Select(a => new double[] { x + 15 * TERRAIN_STEP * Math.Sin(3.14 * 2 * a / 5) + Rng.NextDouble(0, 5 * TERRAIN_STEP),
-                                                                             y + 5 * TERRAIN_STEP * Math.Cos(3.14 * 2 * a / 5) + Rng.NextDouble(0, 5 * TERRAIN_STEP) }).ToList();
+                var poly = Enumerable.Range(0, 5).Select(a => new float[] { x + 15 * TERRAIN_STEP * (float)Math.Sin(3.14 * 2 * a / 5) + Rng.NextFloat(0, 5 * TERRAIN_STEP),
+                                                                             y + 5 * TERRAIN_STEP * (float)Math.Cos(3.14 * 2 * a / 5) + Rng.NextFloat(0, 5 * TERRAIN_STEP) }).ToList();
 
                 var x1 = (float)poly.Select(p => p[0]).Min();
                 var x2 = (float)poly.Select(p => p[0]).Max();
-                cloud_poly.Add(new Tuple<List<double[]>, b2Vec2>(poly, new b2Vec2(x1, x2)));
+                cloud_poly.Add(new Tuple<List<float[]>, b2Vec2>(poly, new b2Vec2(x1, x2)));
             }
         }
 
@@ -584,8 +584,8 @@ namespace DeepQL.Gyms
         private List<b2Body> legs = new List<b2Body>();
         private List<b2RevoluteJoint> joints = new List<b2RevoluteJoint>();
         private b2Body hull;
-        private List<Tuple<List<double[]>, b2Vec3>> terrain_poly = new List<Tuple<List<double[]>, b2Vec3>>();
-        private List<Tuple<List<double[]>, b2Vec2>> cloud_poly = new List<Tuple<List<double[]>, b2Vec2>>();
+        private List<Tuple<List<float[]>, b2Vec3>> terrain_poly = new List<Tuple<List<float[]>, b2Vec3>>();
+        private List<Tuple<List<float[]>, b2Vec2>> cloud_poly = new List<Tuple<List<float[]>, b2Vec2>>();
         private List<b2Body> drawlist = new List<b2Body>();
         protected bool hardcore = false;
         private bool game_over;
