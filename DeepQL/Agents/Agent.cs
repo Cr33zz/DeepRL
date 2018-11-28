@@ -13,11 +13,12 @@ namespace DeepQL.Agents
         {
             Name = name;
             Env = env;
-            Epsilon = MaxEpsilon;
         }
 
         public void Train(int episodes, int maxStepsPerEpisode, bool render)
         {
+            Epsilon = MaxEpsilon;
+
             var rewardChart = new Neuro.ChartGenerator($"{Name}_reward.png", Name, "Episode");
             rewardChart.AddSeries(0, "Reward", System.Drawing.Color.LightGray);
             rewardChart.AddSeries(1, "Avg reward", System.Drawing.Color.Blue);
