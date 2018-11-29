@@ -107,12 +107,13 @@ namespace DeepQL.ValueFunc
             }
             ++TrainingsStep;
 
-            Model.Fit(states, rewards, -1, 1, 0, Track.Nothing);
+            Model.Fit(states, rewards, -1, TrainingEpochs, 0, Track.Nothing);
         }
 
         protected bool UsingTargetModel { get { return TargetModelUpdateFreq > 0; } }
 
         public int BatchSize = 32;
+        public int TrainingEpochs = 1;
         public int TargetModelUpdateFreq = 0;
         public int ChartSaveFreq = 200;
         protected NeuralNetwork Model;

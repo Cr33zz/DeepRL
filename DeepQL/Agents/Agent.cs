@@ -39,8 +39,9 @@ namespace DeepQL.Agents
                 LastObservation = Env.Reset();
 
                 float totalReward = 0;
+                int step = 0;
 
-                for (int step = 0; step < maxStepsPerEpisode; ++step, ++globalStep)
+                for (; step < maxStepsPerEpisode; ++step, ++globalStep)
                 {
                     Tensor action;
 
@@ -53,6 +54,9 @@ namespace DeepQL.Agents
 
                     if (done && !float.IsNaN(RewardOnDone))
                         reward = RewardOnDone;
+
+                    if (ClipReward)
+                        reward = Neuro.Tools.Clip(reward, -1, 1);
 
                     totalReward += reward;
 
@@ -86,7 +90,7 @@ namespace DeepQL.Agents
                     Save($"{Name}_{ep}");
 
                 if (Verbose)
-                    LogLine($"Ep: {ep} Reward(Avg): {Math.Round(totalReward, 2)}({Math.Round(moveAvg.Avg, 2)}) Epsilon: {Math.Round(Epsilon, 4)}");
+                    LogLine($"Episode: {ep}  reward(avg): {Math.Round(totalReward, 2)}({Math.Round(moveAvg.Avg, 2)})  steps: {step}  epsilon: {Math.Round(Epsilon, 4)}");
 
                 if (EpsilonDecayMode == EEpsilonDecayMode.EveryEpisode)
                     DecayEpsilon();
@@ -127,7 +131,7 @@ namespace DeepQL.Agents
                 totalRewards[ep] = totalReward;
 
                 if (Verbose)
-                    LogLine($"Ep: {ep} Reward: {Math.Round(totalReward, 2)}");
+                    LogLine($"Episode# {ep}  reward: {Math.Round(totalReward, 2)}");
             }
 
             SaveLog();
@@ -182,6 +186,8 @@ namespace DeepQL.Agents
         public float RewardOnDone = float.NaN;
         // Used for controling rendering FPS
         public int RenderFreq = 30;
+        // When enabled rewards will be clipped to [-1, 1] range (inclusive)
+        public bool ClipReward = false;
         public bool Verbose = false;
 
         protected float Epsilon; // Exploration probability
