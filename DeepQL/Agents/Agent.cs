@@ -56,7 +56,7 @@ namespace DeepQL.Agents
 
                     totalReward += reward;
 
-                    if (TrainingRenderFreq > 0 && (globalStep % TrainingRenderFreq == 0))
+                    if (TrainingRenderFreq > 0 && (ep % TrainingRenderFreq == 0))
                         RenderEnv();
                     
                     OnStep(step, globalStep, action, reward, observation, done);
@@ -82,7 +82,7 @@ namespace DeepQL.Agents
                 rewardChart.AddData(ep, totalReward, 0);
                 rewardChart.AddData(ep, moveAvg.Avg, 1);
 
-                if (SaveFreq > 0 && ep % SaveFreq == 0)
+                if (SaveFreq > 0 && (ep % SaveFreq == 0))
                     Save($"{Name}_{ep}");
 
                 if (Verbose)

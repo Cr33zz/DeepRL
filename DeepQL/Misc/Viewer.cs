@@ -36,7 +36,7 @@ namespace DeepQL.Misc
                 ((System.ComponentModel.ISupportInitialize)(OpenGLControl)).EndInit();
 
                 Name = Text = "Viewer";
-                FormBorderStyle = FormBorderStyle.None;
+                FormBorderStyle = FormBorderStyle.FixedSingle;
 
 
                 Show();
