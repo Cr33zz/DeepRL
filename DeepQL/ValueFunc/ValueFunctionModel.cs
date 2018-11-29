@@ -15,16 +15,17 @@ namespace DeepQL.ValueFunc
         public abstract Tensor GetOptimalAction(Tensor state);
 
         public abstract void OnStep(Tensor state, Tensor action, float reward, Tensor nextState, bool done);
+        public abstract void OnTrain();
         public virtual void OnEpisodeEnd(int episode) { }
         public virtual void SaveState(string filename) { }
         public virtual void LoadState(string filename) { }
 
-        protected abstract void Train(List<Transition> transitions);
+        //protected abstract void Train(List<Transition> transitions);
 
-        protected void Train(Transition trans)
-        {
-            Train(new List<Transition>() { trans });
-        }
+        //protected void Train(Transition trans)
+        //{
+        //    Train(new List<Transition>() { trans });
+        //}
 
         protected readonly float LearningRate;
         protected readonly float DiscountFactor;

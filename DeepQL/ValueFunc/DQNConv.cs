@@ -8,7 +8,7 @@ namespace DeepQL.ValueFunc
 {
     public class DQNConv : DQN
     {
-        public DQNConv(Shape inputShape, int numberOfActions, float learningRate, float discountFactor, int temporalDataSize = 4)
+        public DQNConv(Shape inputShape, int numberOfActions, float learningRate, float discountFactor)
             :base(inputShape, numberOfActions, learningRate, discountFactor)
         {
             Model = new NeuralNetwork("DQNConv");
@@ -18,21 +18,18 @@ namespace DeepQL.ValueFunc
             Model.AddLayer(new Flatten(Model.LastLayer));
             Model.AddLayer(new Dense(Model.LastLayer, 512, Activation.ELU));
             Model.AddLayer(new Dense(Model.LastLayer, numberOfActions, Activation.Softmax));
-
-            TemporalDataSize = temporalDataSize;
         }
 
         public override void OnStep(Tensor state, Tensor action, float reward, Tensor nextState, bool done)
         {
             UpdateTemporalData(state);
-            //Memory.Push(new Transition(Tensor.Merge(TemporalData, 4), action, reward, nextState, done));
+            ReplayMem.Push(new Transition(Tensor.Merge(TemporalData, 4), action, reward, nextState, done));
         }
 
-        protected override void Train(List<Transition> transitions)
-        {
-            // make an input batch from transitions and perform a back propagation step
-
-        }
+        //protected override void Train(List<Transition> transitions)
+        //{
+        //    // make an input batch from transitions and perform a back propagation step
+        //}
 
         private void UpdateTemporalData(Tensor state)
         {
@@ -47,7 +44,7 @@ namespace DeepQL.ValueFunc
             TemporalData.RemoveAt(0);
         }
 
-        private int TemporalDataSize;
+        public int TemporalDataSize = 4;
         private List<Tensor> TemporalData = new List<Tensor>();
     }
 }

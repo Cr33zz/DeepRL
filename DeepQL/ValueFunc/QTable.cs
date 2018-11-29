@@ -21,15 +21,18 @@ namespace DeepQL.ValueFunc
 
         public override void OnStep(Tensor state, Tensor action, float reward, Tensor nextState, bool done)
         {
-            int stateInt = (int)state[0];
-            int actionInt = (int)action[0];
-            Table[stateInt, actionInt] += LearningRate * (reward + DiscountFactor * GetMaxRewardBasedOnQTable((int)nextState[0]) - Table[stateInt, actionInt]);
+            LastStepState = state;
+            LastStepAction = action;
+            LastStepReward = reward;
+            LastStepNextState = nextState;
         }
 
-        protected override void Train(List<Transition> transitions)
+        public override void OnTrain()
         {
-            foreach (var trans in transitions)
-                OnStep(trans.State, trans.Action, trans.Reward, trans.NextState, trans.Done);
+            int stateInt = (int)LastStepState[0];
+            int actionInt = (int)LastStepAction[0];
+
+            Table[stateInt, actionInt] += LearningRate * (LastStepReward + DiscountFactor * GetMaxRewardBasedOnQTable((int)LastStepNextState[0]) - Table[stateInt, actionInt]);
         }
 
         private int BestActionBasedOnQTable(int state)
@@ -60,5 +63,9 @@ namespace DeepQL.ValueFunc
         }
         
         private readonly float[,] Table;
+        private Tensor LastStepState;
+        private Tensor LastStepAction;
+        private float LastStepReward;
+        private Tensor LastStepNextState;
     }
 }

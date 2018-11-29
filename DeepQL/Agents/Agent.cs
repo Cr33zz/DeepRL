@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using DeepQL.Environments;
@@ -7,6 +9,12 @@ using Neuro.Tensors;
 
 namespace DeepQL.Agents
 {
+    public enum EEpsilonDecayMode
+    {
+        EveryStep,
+        EveryEpisode,
+    }
+
     public abstract class Agent
     {
         protected Agent(string name, Env env)
@@ -15,7 +23,7 @@ namespace DeepQL.Agents
             Env = env;
         }
 
-        public void Train(int episodes, int maxStepsPerEpisode, bool render)
+        public void Train(int episodes, int maxStepsPerEpisode)
         {
             Epsilon = MaxEpsilon;
 
@@ -24,13 +32,15 @@ namespace DeepQL.Agents
             rewardChart.AddSeries(1, "Avg reward", System.Drawing.Color.Blue);
             var moveAvg = new MovingAverage(100);
 
+            int globalStep = 0;
+
             for (int ep = 0; ep < episodes; ++ep)
             {
                 LastObservation = Env.Reset();
 
                 float totalReward = 0;
 
-                for (int step = 0; step < maxStepsPerEpisode; ++step)
+                for (int step = 0; step < maxStepsPerEpisode; ++step, ++globalStep)
                 {
                     Tensor action;
 
@@ -46,33 +56,47 @@ namespace DeepQL.Agents
 
                     totalReward += reward;
 
-                    Render(render);
-
-                    OnStep(step, action, reward, observation, done);
+                    if (TrainingRenderFreq > 0 && (globalStep % TrainingRenderFreq == 0))
+                        RenderEnv();
+                    
+                    OnStep(step, globalStep, action, reward, observation, done);
 
                     LastObservation = observation;
+
+                    if (!TrainOnlyOnEpisodeEnd && (globalStep > StepsBeforeTraining))
+                        OnTrain();
+
+                    if (EpsilonDecayMode == EEpsilonDecayMode.EveryStep)
+                        DecayEpsilon();
 
                     if (done)
                         break;
                 }
 
+                if (TrainOnlyOnEpisodeEnd && (globalStep >= StepsBeforeTraining))
+                    OnTrain();
+
                 OnEpisodeEnd(ep);
-
-                if (SaveFrequency > 0 && ep % SaveFrequency == 0)
-                    Save($"{Name}_{ep}");
-
-                if (Verbose)
-                    Console.WriteLine($"Ep {ep}: reward {Math.Round(totalReward, 2)} epsilon {Math.Round(Epsilon, 4)}");
-
-                Epsilon = Math.Max(MinEpsilon, Epsilon * EpsilonDecay);
 
                 moveAvg.Add(totalReward);
                 rewardChart.AddData(ep, totalReward, 0);
                 rewardChart.AddData(ep, moveAvg.Avg, 1);
 
+                if (SaveFreq > 0 && ep % SaveFreq == 0)
+                    Save($"{Name}_{ep}");
+
+                if (Verbose)
+                    LogLine($"Ep: {ep} Reward(Avg): {Math.Round(totalReward, 2)}({Math.Round(moveAvg.Avg, 2)}) Epsilon: {Math.Round(Epsilon, 4)}");
+
+                if (EpsilonDecayMode == EEpsilonDecayMode.EveryEpisode)
+                    DecayEpsilon();
+
                 if (ep % 20 == 0)
                     rewardChart.Save();
             }
+
+            rewardChart.Save();
+            SaveLog();
         }
 
         public float Test(int episodes, int maxStepsPerEpisode, bool render)
@@ -93,7 +117,8 @@ namespace DeepQL.Agents
                     LastObservation = observation;
                     totalReward += reward;
 
-                    Render(render);
+                    if (render)
+                        RenderEnv();
 
                     if (done)
                         break;
@@ -102,9 +127,10 @@ namespace DeepQL.Agents
                 totalRewards[ep] = totalReward;
 
                 if (Verbose)
-                    Console.WriteLine($"Ep {ep}: reward {Math.Round(totalReward, 2)}");
+                    LogLine($"Ep: {ep} Reward: {Math.Round(totalReward, 2)}");
             }
 
+            SaveLog();
             return totalRewards.Sum() / episodes;
         }
 
@@ -112,31 +138,54 @@ namespace DeepQL.Agents
         public virtual void Load(string filename) { }
 
         protected abstract Tensor GetOptimalAction();
-        protected abstract void OnStep(int step, Tensor action, float reward, Tensor nextState, bool done);
+        protected abstract void OnStep(int step, int globalStep, Tensor action, float reward, Tensor nextState, bool done);
+        protected abstract void OnTrain();
         protected virtual void OnEpisodeEnd(int episode) { }
 
-        protected void Render(bool render)
+        private void RenderEnv()
         {
-            if (render)
-            {
-                Env.Render();
-                Thread.Sleep(1000 / StepsPerSec);
-            }
+            Env.Render();
+            Thread.Sleep(1000 / RenderFreq);
+        }
+
+        private void DecayEpsilon()
+        {
+            Epsilon = Math.Max(MinEpsilon, Epsilon * EpsilonDecay);
+        }
+
+        private void LogLine(string text)
+        {
+            LogLines.Add(text);
+            Console.WriteLine(text);
+        }
+
+        private void SaveLog()
+        {
+            File.WriteAllLines($"{Name}_log.txt", LogLines);
         }
 
         protected Tensor LastObservation;
         protected readonly Env Env;
-        
+
         public float MinEpsilon = 0.01f;
         public float MaxEpsilon = 1.0f;
         public float EpsilonDecay = 0.995f;
-        protected float Epsilon; // Exploration probability
-
+        public EEpsilonDecayMode EpsilonDecayMode = EEpsilonDecayMode.EveryEpisode;
+        public bool TrainOnlyOnEpisodeEnd = false;
+        // Number of total steps that have to be performed before agent will start training
+        public int StepsBeforeTraining = 0;
+        // Parameters training parameters will be saved every that number of episodes (0 for no saving)
+        public int SaveFreq = 50;
+        // Training episode will be rendered every that number of episodes (0 for no rendering)
+        public int TrainingRenderFreq = 0;
+        // When not NaN, reward for step in which simulation ended will be overriten with that value
         public float RewardOnDone = float.NaN;
+        // Used for controling rendering FPS
+        public int RenderFreq = 30;
         public bool Verbose = false;
-        public int StepsPerSec = 30;
 
-        public int SaveFrequency = 50; // save parameters every SaveFrequency episodes
+        protected float Epsilon; // Exploration probability
         private readonly string Name;
+        private List<string> LogLines = new List<string>();
     }
 }

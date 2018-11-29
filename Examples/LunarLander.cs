@@ -19,7 +19,7 @@ namespace Examples
                 Verbose = true,
                 //EpsilonDecay = 0.999f
             };
-            agent.Train(1000, 2000, false);
+            agent.Train(1000, 2000);
 
             Console.WriteLine($"Average reward {agent.Test(10, 2000, true)}");
         }
