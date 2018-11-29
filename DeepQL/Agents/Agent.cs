@@ -30,6 +30,7 @@ namespace DeepQL.Agents
             var rewardChart = new Neuro.ChartGenerator($"{Name}_reward.png", Name, "Episode");
             rewardChart.AddSeries(0, "Reward", System.Drawing.Color.LightGray);
             rewardChart.AddSeries(1, "Avg reward", System.Drawing.Color.Blue);
+            rewardChart.AddSeries(2, "Steps per episode", System.Drawing.Color.CornflowerBlue, true);
             var moveAvg = new MovingAverage(100);
 
             int globalStep = 0;
@@ -85,6 +86,7 @@ namespace DeepQL.Agents
                 moveAvg.Add(totalReward);
                 rewardChart.AddData(ep, totalReward, 0);
                 rewardChart.AddData(ep, moveAvg.Avg, 1);
+                rewardChart.AddData(ep, step, 2);
 
                 if (SaveFreq > 0 && (ep % SaveFreq == 0))
                     Save($"{Name}_{ep}");
@@ -111,8 +113,8 @@ namespace DeepQL.Agents
             {
                 LastObservation = Env.Reset();
                 float totalReward = 0;
-
-                for (int step = 0; step < maxStepsPerEpisode; ++step)
+                int step = 0;
+                for (; step < maxStepsPerEpisode; ++step)
                 {
                     Tensor action = GetOptimalAction();
 
@@ -131,7 +133,7 @@ namespace DeepQL.Agents
                 totalRewards[ep] = totalReward;
 
                 if (Verbose)
-                    LogLine($"Episode# {ep}  reward: {Math.Round(totalReward, 2)}");
+                    LogLine($"Episode: {ep}  reward: {Math.Round(totalReward, 2)}  steps: {step}");
             }
 
             SaveLog();
