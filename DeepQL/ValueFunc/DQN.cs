@@ -110,6 +110,8 @@ namespace DeepQL.ValueFunc
             Model.Fit(states, rewards, -1, TrainingEpochs, 0, Track.Nothing);
         }
 
+        public override string GetParametersDescription() { return $"{base.GetParametersDescription()} batch_size={BatchSize}"; }
+
         protected bool UsingTargetModel { get { return TargetModelUpdateFreq > 0; } }
 
         public int BatchSize = 32;

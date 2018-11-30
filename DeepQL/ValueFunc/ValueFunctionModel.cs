@@ -19,13 +19,7 @@ namespace DeepQL.ValueFunc
         public virtual void OnEpisodeEnd(int episode) { }
         public virtual void SaveState(string filename) { }
         public virtual void LoadState(string filename) { }
-
-        //protected abstract void Train(List<Transition> transitions);
-
-        //protected void Train(Transition trans)
-        //{
-        //    Train(new List<Transition>() { trans });
-        //}
+        public virtual string GetParametersDescription() { return $"lr={LearningRate} γ={DiscountFactor}"; }
 
         protected readonly float LearningRate;
         protected readonly float DiscountFactor;

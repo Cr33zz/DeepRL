@@ -27,15 +27,16 @@ namespace DeepQL.Agents
         {
             Epsilon = MaxEpsilon;
 
-            var rewardChart = new Neuro.ChartGenerator($"{Name}_reward.png", Name, "Episode");
+            var rewardChart = new Neuro.ChartGenerator($"{Name}_reward.png", $"{Name}\n({GetParametersDescription()})", "Episode");
             rewardChart.AddSeries(0, "Reward", System.Drawing.Color.LightGray);
-            rewardChart.AddSeries(1, "Avg reward", System.Drawing.Color.Blue);
-            rewardChart.AddSeries(2, "Steps per episode", System.Drawing.Color.CornflowerBlue, true);
-            var moveAvg = new MovingAverage(100);
+            rewardChart.AddSeries(1, $"Avg({RewardAverageN}) reward", System.Drawing.Color.Blue);
+            rewardChart.AddSeries(2, $"Avg({StepsAverageN}) steps per episode\n(right axis)", System.Drawing.Color.CornflowerBlue, true);
+            var rewardAvg = new MovingAverage(RewardAverageN);
+            var stepsAvg = new MovingAverage(StepsAverageN);
 
             int globalStep = 0;
 
-            for (int ep = 0; ep < episodes; ++ep)
+            for (int ep = 1; ep <= episodes; ++ep)
             {
                 LastObservation = Env.Reset();
 
@@ -46,10 +47,13 @@ namespace DeepQL.Agents
                 {
                     Tensor action;
 
-                    if (GlobalRandom.Rng.NextDouble() < Epsilon)
+                    if (globalStep < StepsBeforeTraining || GlobalRandom.Rng.NextDouble() < Epsilon)
                         action = Env.ActionSpace.Sample(); // explore
                     else
                         action = GetOptimalAction(); // exploit
+
+                    if (globalStep >= StepsBeforeTraining && EpsilonDecayMode == EEpsilonDecayMode.EveryStep)
+                        DecayEpsilon();
 
                     bool done = Env.Step(action, out var observation, out var reward);
 
@@ -71,9 +75,6 @@ namespace DeepQL.Agents
                     if (!TrainOnlyOnEpisodeEnd && (globalStep > StepsBeforeTraining))
                         OnTrain();
 
-                    if (EpsilonDecayMode == EEpsilonDecayMode.EveryStep)
-                        DecayEpsilon();
-
                     if (done)
                         break;
                 }
@@ -83,18 +84,19 @@ namespace DeepQL.Agents
 
                 OnEpisodeEnd(ep);
 
-                moveAvg.Add(totalReward);
+                rewardAvg.Add(totalReward);
+                stepsAvg.Add(step);
                 rewardChart.AddData(ep, totalReward, 0);
-                rewardChart.AddData(ep, moveAvg.Avg, 1);
-                rewardChart.AddData(ep, step, 2);
+                rewardChart.AddData(ep, rewardAvg.Avg, 1);
+                rewardChart.AddData(ep, stepsAvg.Avg, 2);
 
                 if (SaveFreq > 0 && (ep % SaveFreq == 0))
                     Save($"{Name}_{ep}");
 
                 if (Verbose)
-                    LogLine($"Episode: {ep}  reward(avg): {Math.Round(totalReward, 2)}({Math.Round(moveAvg.Avg, 2)})  steps: {step}  epsilon: {Math.Round(Epsilon, 4)}");
+                    LogLine($"Episode: {ep}  reward(avg): {Math.Round(totalReward, 2)}({Math.Round(rewardAvg.Avg, 2)})  steps: {step}  ε: {Math.Round(Epsilon, 4)}");
 
-                if (EpsilonDecayMode == EEpsilonDecayMode.EveryEpisode)
+                if (globalStep >= StepsBeforeTraining && EpsilonDecayMode == EEpsilonDecayMode.EveryEpisode)
                     DecayEpsilon();
 
                 if (ep % 20 == 0)
@@ -147,6 +149,10 @@ namespace DeepQL.Agents
         protected abstract void OnStep(int step, int globalStep, Tensor action, float reward, Tensor nextState, bool done);
         protected abstract void OnTrain();
         protected virtual void OnEpisodeEnd(int episode) { }
+        protected virtual string GetParametersDescription()
+        {
+            return $"ε_max={MaxEpsilon} ε_decay[mode]={EpsilonDecay}[{EpsilonDecayMode}]";
+        }
 
         private void RenderEnv()
         {
@@ -191,6 +197,8 @@ namespace DeepQL.Agents
         // When enabled rewards will be clipped to [-1, 1] range (inclusive)
         public bool ClipReward = false;
         public bool Verbose = false;
+        public int RewardAverageN = 100;
+        public int StepsAverageN = 20;
 
         protected float Epsilon; // Exploration probability
         private readonly string Name;

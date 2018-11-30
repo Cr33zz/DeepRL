@@ -33,6 +33,11 @@ namespace DeepQL.Agents
             ValueFuncModel.OnEpisodeEnd(episode);
         }
 
+        protected override string GetParametersDescription()
+        {
+            return $"{base.GetParametersDescription()} {ValueFuncModel.GetParametersDescription()}";
+        }
+
         public override void Save(string filename)
         {
             ValueFuncModel.SaveState(filename);
