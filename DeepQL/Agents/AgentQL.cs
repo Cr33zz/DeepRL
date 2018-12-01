@@ -20,7 +20,7 @@ namespace DeepQL.Agents
 
         protected override void OnStep(int step, int globalStep, Tensor action, float reward, Tensor observation, bool done)
         {
-            ValueFuncModel.OnStep(LastObservation, action, reward, observation, done);
+            ValueFuncModel.OnStep(step, globalStep, LastObservation, action, reward, observation, done);
         }
 
         protected override void OnTrain()

@@ -20,7 +20,7 @@ namespace DeepQL.ValueFunc
             Model.AddLayer(new Dense(Model.LastLayer, numberOfActions, Activation.Softmax));
         }
 
-        public override void OnStep(Tensor state, Tensor action, float reward, Tensor nextState, bool done)
+        public override void OnStep(int step, int globalStep, Tensor state, Tensor action, float reward, Tensor nextState, bool done)
         {
             UpdateTemporalData(state);
             ReplayMem.Push(new Transition(Tensor.Merge(TemporalData, 4), action, reward, nextState, done));

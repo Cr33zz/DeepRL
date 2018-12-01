@@ -24,7 +24,7 @@ namespace DeepQL.ValueFunc
 
             ErrorChart = new ChartGenerator($"DQN_agent_error", "Q prediction error", "Epoch");
             ErrorChart.AddSeries(0, "MSE", System.Drawing.Color.LightGray);
-            ErrorChart.AddSeries(1, "Avg MSE", System.Drawing.Color.Red);
+            ErrorChart.AddSeries(1, $"Avg({ErrorAvg.N}) MSE", System.Drawing.Color.Firebrick);
         }
 
         public override Tensor GetOptimalAction(Tensor state)
@@ -35,12 +35,13 @@ namespace DeepQL.ValueFunc
             return action;
         }
 
-        public override void OnStep(Tensor state, Tensor action, float reward, Tensor nextState, bool done)
+        public override void OnStep(int step, int globalStep, Tensor state, Tensor action, float reward, Tensor nextState, bool done)
         {
             if (UsingTargetModel && TargetModel == null)
                 TargetModel = Model.Clone();
 
-            ReplayMem.Push(new Transition(state, action, reward, nextState, done));
+            if (globalStep % MemoryInterval == 0)
+                ReplayMem.Push(new Transition(state, action, reward, nextState, done));
         }
 
         public override void OnTrain()
@@ -51,7 +52,7 @@ namespace DeepQL.ValueFunc
 
         public override void OnEpisodeEnd(int episode)
         {
-            if (UsingTargetModel && (episode % TargetModelUpdateFreq == 0))
+            if (UsingTargetModel && (episode % TargetModelUpdateInterval == 0))
                 Model.CopyParametersTo(TargetModel);
         }
 
@@ -96,13 +97,13 @@ namespace DeepQL.ValueFunc
                 rewards[0, (int)trans.Action[0], 0, i] = reward;
             }
 
-            if (ChartSaveFreq > 0)
+            if (ChartSaveInterval > 0)
             {
                 var meanSquareError = totalSquareError / transitions.Count;
-                MoveAvg.Add(meanSquareError);
+                ErrorAvg.Add(meanSquareError);
                 ErrorChart.AddData(TrainingsStep, meanSquareError, 0);
-                ErrorChart.AddData(TrainingsStep, MoveAvg.Avg, 1);
-                if (TrainingsStep % ChartSaveFreq == 0)
+                ErrorChart.AddData(TrainingsStep, ErrorAvg.Avg, 1);
+                if (TrainingsStep % ChartSaveInterval == 0)
                     ErrorChart.Save();
             }
             ++TrainingsStep;
@@ -112,17 +113,20 @@ namespace DeepQL.ValueFunc
 
         public override string GetParametersDescription() { return $"{base.GetParametersDescription()} batch_size={BatchSize}"; }
 
-        protected bool UsingTargetModel { get { return TargetModelUpdateFreq > 0; } }
+        protected bool UsingTargetModel { get { return TargetModelUpdateInterval > 0; } }
 
         public int BatchSize = 32;
         public int TrainingEpochs = 1;
-        public int TargetModelUpdateFreq = 0;
-        public int ChartSaveFreq = 200;
+        public int TargetModelUpdateInterval = 0;
+        public int MemoryInterval = 1;
+        // Training loss will be clipped to [-DeltaClip, DeltaClip]
+        public float DeltaClip = float.PositiveInfinity;
+        public int ChartSaveInterval = 200;
         protected NeuralNetwork Model;
         protected NeuralNetwork TargetModel;
         protected ReplayMemory ReplayMem;
-        private ChartGenerator ErrorChart;
-        private MovingAverage MoveAvg = new MovingAverage(100);
+        private readonly ChartGenerator ErrorChart;
+        private readonly MovingAverage ErrorAvg = new MovingAverage(100);
         private int TrainingsStep;
     }
 }

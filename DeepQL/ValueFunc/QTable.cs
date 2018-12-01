@@ -19,7 +19,7 @@ namespace DeepQL.ValueFunc
             return action;
         }
 
-        public override void OnStep(Tensor state, Tensor action, float reward, Tensor nextState, bool done)
+        public override void OnStep(int step, int globalStep, Tensor state, Tensor action, float reward, Tensor nextState, bool done)
         {
             LastStepState = state;
             LastStepAction = action;

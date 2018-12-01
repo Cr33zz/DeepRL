@@ -19,9 +19,9 @@ namespace DeepQL.Misc
             Values.Enqueue(value);
         }
 
+        public readonly int N;
         public float Avg => Values.Sum() / Values.Count;
 
-        private Queue<float> Values = new Queue<float>();
-        private readonly int N;
+        private readonly Queue<float> Values = new Queue<float>();
     }
 }

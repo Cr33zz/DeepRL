@@ -15,18 +15,18 @@ namespace Examples
             var qFunc = new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), 0.001f, 0.95f, 60000)
             {
                 BatchSize = 32,
-                TargetModelUpdateFreq = 1,
+                TargetModelUpdateInterval = 1,
                 TrainingEpochs = 2
             };
 
             Agent agent = new AgentQL("dqn_lunarlander", env, qFunc)
             {
-                StepsBeforeTraining = 2000,
+                WarmupSteps = 2000,
                 MaxEpsilon = 0.7f,
                 EpsilonDecay = 0.98f,
                 //TrainOnlyOnEpisodeEnd = true,
                 Verbose = true,
-                TrainingRenderFreq = 20
+                TrainRenderInterval = 20
             };
 
             agent.Train(500, 5000);

@@ -47,12 +47,12 @@ namespace DeepQL.Agents
                 {
                     Tensor action;
 
-                    if (globalStep < StepsBeforeTraining || GlobalRandom.Rng.NextDouble() < Epsilon)
+                    if (globalStep < WarmupSteps || GlobalRandom.Rng.NextDouble() < Epsilon)
                         action = Env.ActionSpace.Sample(); // explore
                     else
                         action = GetOptimalAction(); // exploit
 
-                    if (globalStep >= StepsBeforeTraining && EpsilonDecayMode == EEpsilonDecayMode.EveryStep)
+                    if (globalStep >= WarmupSteps && EpsilonDecayMode == EEpsilonDecayMode.EveryStep)
                         DecayEpsilon();
 
                     bool done = Env.Step(action, out var observation, out var reward);
@@ -60,27 +60,24 @@ namespace DeepQL.Agents
                     if (done && !float.IsNaN(RewardOnDone))
                         reward = RewardOnDone;
 
-                    if (ClipReward)
-                        reward = Neuro.Tools.Clip(reward, -1, 1);
+                    //if (DeltaClip)
+                    //    reward = Neuro.Tools.Clip(reward, -1, 1);
 
                     totalReward += reward;
 
-                    if (TrainingRenderFreq > 0 && (ep % TrainingRenderFreq == 0))
+                    if (TrainRenderInterval > 0 && (ep % TrainRenderInterval == 0))
                         RenderEnv();
                     
                     OnStep(step, globalStep, action, reward, observation, done);
 
                     LastObservation = observation;
 
-                    if (!TrainOnlyOnEpisodeEnd && (globalStep > StepsBeforeTraining))
+                    if ((globalStep % TrainInterval == 0) && (globalStep >= WarmupSteps))
                         OnTrain();
 
                     if (done)
                         break;
                 }
-
-                if (TrainOnlyOnEpisodeEnd && (globalStep >= StepsBeforeTraining))
-                    OnTrain();
 
                 OnEpisodeEnd(ep);
 
@@ -96,7 +93,7 @@ namespace DeepQL.Agents
                 if (Verbose)
                     LogLine($"Episode: {ep}  reward(avg): {Math.Round(totalReward, 2)}({Math.Round(rewardAvg.Avg, 2)})  steps: {step}  ε: {Math.Round(Epsilon, 4)}");
 
-                if (globalStep >= StepsBeforeTraining && EpsilonDecayMode == EEpsilonDecayMode.EveryEpisode)
+                if (globalStep >= WarmupSteps && EpsilonDecayMode == EEpsilonDecayMode.EveryEpisode)
                     DecayEpsilon();
 
                 if (ep % 20 == 0)
@@ -151,7 +148,7 @@ namespace DeepQL.Agents
         protected virtual void OnEpisodeEnd(int episode) { }
         protected virtual string GetParametersDescription()
         {
-            return $"ε_max={MaxEpsilon} ε_decay[mode]={EpsilonDecay}[{EpsilonDecayMode}]";
+            return $"ε_max={MaxEpsilon} ε_decay/mode={EpsilonDecay}/{EpsilonDecayMode} train_int={TrainInterval}";
         }
 
         private void RenderEnv()
@@ -183,19 +180,17 @@ namespace DeepQL.Agents
         public float MaxEpsilon = 1.0f;
         public float EpsilonDecay = 0.995f;
         public EEpsilonDecayMode EpsilonDecayMode = EEpsilonDecayMode.EveryEpisode;
-        public bool TrainOnlyOnEpisodeEnd = false;
+        public int TrainInterval = 1;        
         // Number of total steps that have to be performed before agent will start training
-        public int StepsBeforeTraining = 0;
+        public int WarmupSteps = 0;
         // Parameters training parameters will be saved every that number of episodes (0 for no saving)
         public int SaveFreq = 50;
         // Training episode will be rendered every that number of episodes (0 for no rendering)
-        public int TrainingRenderFreq = 0;
-        // When not NaN, reward for step in which simulation ended will be overriten with that value
+        public int TrainRenderInterval = 0;
+        // When not NaN, reward for step in which simulation ended will be overwritten with that value
         public float RewardOnDone = float.NaN;
-        // Used for controling rendering FPS
-        public int RenderFreq = 30;
-        // When enabled rewards will be clipped to [-1, 1] range (inclusive)
-        public bool ClipReward = false;
+        // Used for controlling rendering FPS
+        public int RenderFreq = 30;        
         public bool Verbose = false;
         public int RewardAverageN = 100;
         public int StepsAverageN = 20;
