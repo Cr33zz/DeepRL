@@ -10,16 +10,20 @@ namespace DeepQL.ValueFunc
 {
     public class DQN : ValueFunctionModel
     {
-        public DQN(Shape inputShape, int numberOfActions, float learningRate, float discountFactor, int replaySize = 1000)
-            : base(inputShape, numberOfActions, learningRate, discountFactor)
+        public DQN(Shape inputShape, int numberOfActions, int[] hiddenLayersNeurons, float learningRate, float discountFactor, int replaySize)
+            : this(inputShape, numberOfActions, learningRate, discountFactor, replaySize)
         {
             Model = new NeuralNetwork("DQN_agent");
             Model.AddLayer(new Flatten(inputShape));
-            Model.AddLayer(new Dense(Model.LastLayer, 24, Activation.ReLU));
-            Model.AddLayer(new Dense(Model.LastLayer, 24, Activation.ReLU));
+            for (int i = 0; i < hiddenLayersNeurons.Length; ++i)
+                Model.AddLayer(new Dense(Model.LastLayer, hiddenLayersNeurons[i], Activation.ReLU));
             Model.AddLayer(new Dense(Model.LastLayer, numberOfActions, Activation.Linear));
             Model.Optimize(new Adam(learningRate), Loss.Huber1);
+        }
 
+        protected DQN(Shape inputShape, int numberOfActions, float learningRate, float discountFactor, int replaySize)
+            : base(inputShape, numberOfActions, learningRate, discountFactor)
+        {
             ReplayMem = new ReplayMemory(replaySize);
 
             ErrorChart = new ChartGenerator($"DQN_agent_error", "Q prediction error", "Epoch");

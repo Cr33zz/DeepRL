@@ -266,8 +266,8 @@ namespace DeepQL.Gyms
             var side = new[] {-tip[1], tip[0]};
             var dispersion = Enumerable.Range(0, 2).Select(i => (float)Rng.NextFloat(-1.0f, +1.0f) / SCALE).ToArray();
 
-            var m_power = 0.0f;
-            if ((continuous && action[0] > 0.0) || (!continuous && action[0] == 2))
+            float m_power = 0.0f;
+            if ((continuous && action[0] > 0.0) || (!continuous && (int)action[0] == 2))
             {
                 // Main engine
                 if (continuous)
@@ -286,9 +286,9 @@ namespace DeepQL.Gyms
                 lander.ApplyLinearImpulse(new b2Vec2(-ox * MAIN_ENGINE_POWER * m_power, -oy * MAIN_ENGINE_POWER * m_power), impulse_pos, true);
             }
 
-            var s_power = 0.0f;
-            var direction = 0;
-            if ((continuous && Math.Abs(action[1]) > 0.5) || (!continuous && (action[0] == 1 || action[0] == 3)))
+            float s_power = 0.0f;
+            float direction = 0.0f;
+            if ((continuous && Math.Abs(action[1]) > 0.5) || (!continuous && ((int)action[0] == 1 || (int)action[0] == 3)))
             {
             // Orientation engines
                 if (continuous)
@@ -331,15 +331,15 @@ namespace DeepQL.Gyms
             Debug.Assert(state.Length == 8);
 
             reward = 0;
-            var shaping = -100 * (float)Math.Sqrt(state[0] * state[0] + state[1] * state[1])
-                          - 100 * (float)Math.Sqrt(state[2] * state[2] + state[3] * state[3])
-                          - 100 * (float)Math.Abs(state[4]) + 10 * state[6] + 10 * state[7];   // And ten points for legs contact, the idea is if you
+            float shaping = -100 * (float)Math.Sqrt(state[0] * state[0] + state[1] * state[1])
+                           - 100 * (float)Math.Sqrt(state[2] * state[2] + state[3] * state[3])
+                           - 100 * Math.Abs(state[4]) + 10.0f * state[6] + 10.0f * state[7];   // And ten points for legs contact, the idea is if you
                                                                                         // lose contact again after landing, you get negative reward
             if (!float.IsNaN(prev_shaping))
                 reward = shaping - prev_shaping;
             prev_shaping = (float)shaping;
 
-            reward -= m_power * 0.30f;  // less fuel spent is better, about -30 for heurisic landing
+            reward -= m_power * 0.30f;  // less fuel spent is better, about -30 for heuristic landing
             reward -= s_power * 0.03f;
 
             var done = false;

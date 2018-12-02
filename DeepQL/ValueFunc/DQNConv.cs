@@ -8,8 +8,8 @@ namespace DeepQL.ValueFunc
 {
     public class DQNConv : DQN
     {
-        public DQNConv(Shape inputShape, int numberOfActions, float learningRate, float discountFactor)
-            :base(inputShape, numberOfActions, learningRate, discountFactor)
+        public DQNConv(Shape inputShape, int numberOfActions, float learningRate, float discountFactor, int replaySize)
+            :base(inputShape, numberOfActions, learningRate, discountFactor, replaySize)
         {
             Model = new NeuralNetwork("DQNConv");
             Model.AddLayer(new Convolution(inputShape, 8, 32, 2, Activation.ELU));

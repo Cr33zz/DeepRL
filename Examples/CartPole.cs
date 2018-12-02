@@ -12,7 +12,7 @@ namespace Examples
         {
             Env env = new CartPoleEnv();
             //https://github.com/rlcode/reinforcement-learning/blob/master/2-cartpole/1-dqn/cartpole_dqn.py
-            Agent agent = new AgentQL("dqn_cartpole", env, new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), 0.001f, 0.99f, 2000) { BatchSize = 64, TargetModelUpdateInterval = 1 })
+            Agent agent = new AgentQL("dqn_cartpole", env, new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), new[]{ 24, 24 }, 0.001f, 0.99f, 2000) { BatchSize = 64, TargetModelUpdateInterval = 1 })
             {
                 Verbose = true,
                 RewardOnDone = -100,

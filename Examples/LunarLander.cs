@@ -12,26 +12,26 @@ namespace Examples
         {
             Env env = new LunarLanderEnv();
 
-            var qFunc = new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), 0.001f, 0.95f, 60000)
+            var qFunc = new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), new[]{ 24, 24 },  0.001f, 0.99f, 60000)
             {
                 BatchSize = 32,
                 MemoryInterval = 1,
-                TargetModelUpdateInterval = 100,
+                TargetModelUpdateInterval = 50,
                 TrainingEpochs = 2
             };
 
-            Agent agent = new AgentQL("dqn_lunarlander", env, qFunc)
+            Agent agent = new AgentQL("dqn_lunarlander(24,24)", env, qFunc)
             {
-                WarmupSteps = 2000,
-                MaxEpsilon = 0.9f,
+                WarmupSteps = 1000,
+                MaxEpsilon = 1.0f,
                 EpsilonDecay = 0.99f,
                 RewardClipping = false,
-                TrainInterval = 4,
+                TrainInterval = 2,
                 Verbose = true,
-                TrainRenderInterval = 5
+                TrainRenderInterval = 10
             };
 
-            agent.Train(500, 2000);
+            agent.Train(1500, 2000);
 
             Console.WriteLine($"Average reward {agent.Test(10, 2000, true)}");
         }
