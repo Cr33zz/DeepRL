@@ -18,7 +18,7 @@ namespace DeepQL.ValueFunc
             Model.AddLayer(new Dense(Model.LastLayer, 24, Activation.ReLU));
             Model.AddLayer(new Dense(Model.LastLayer, 24, Activation.ReLU));
             Model.AddLayer(new Dense(Model.LastLayer, numberOfActions, Activation.Linear));
-            Model.Optimize(new Adam(learningRate), Loss.MeanSquareError);
+            Model.Optimize(new Adam(learningRate), Loss.Huber1);
 
             ReplayMem = new ReplayMemory(replaySize);
 
@@ -37,11 +37,16 @@ namespace DeepQL.ValueFunc
 
         public override void OnStep(int step, int globalStep, Tensor state, Tensor action, float reward, Tensor nextState, bool done)
         {
-            if (UsingTargetModel && TargetModel == null)
-                TargetModel = Model.Clone();
-
             if (globalStep % MemoryInterval == 0)
                 ReplayMem.Push(new Transition(state, action, reward, nextState, done));
+
+            if (UsingTargetModel && (globalStep % TargetModelUpdateInterval == 0))
+            {
+                if (TargetModel == null)
+                    TargetModel = Model.Clone();
+
+                Model.CopyParametersTo(TargetModel);
+            }
         }
 
         public override void OnTrain()
@@ -52,8 +57,6 @@ namespace DeepQL.ValueFunc
 
         public override void OnEpisodeEnd(int episode)
         {
-            if (UsingTargetModel && (episode % TargetModelUpdateInterval == 0))
-                Model.CopyParametersTo(TargetModel);
         }
 
         public override void SaveState(string filename)

@@ -60,8 +60,8 @@ namespace DeepQL.Agents
                     if (done && !float.IsNaN(RewardOnDone))
                         reward = RewardOnDone;
 
-                    //if (DeltaClip)
-                    //    reward = Neuro.Tools.Clip(reward, -1, 1);
+                    if (RewardClipping)
+                        reward = reward > 0 ? 1 : (reward < 0 ? -1 : 0);
 
                     totalReward += reward;
 
@@ -146,9 +146,10 @@ namespace DeepQL.Agents
         protected abstract void OnStep(int step, int globalStep, Tensor action, float reward, Tensor nextState, bool done);
         protected abstract void OnTrain();
         protected virtual void OnEpisodeEnd(int episode) { }
+
         protected virtual string GetParametersDescription()
         {
-            return $"ε_max={MaxEpsilon} ε_decay/mode={EpsilonDecay}/{EpsilonDecayMode} train_int={TrainInterval}";
+            return $"ε_max={MaxEpsilon} ε_decay/mode={EpsilonDecay}/{EpsilonDecayMode} train_int={TrainInterval} reward_clip={RewardClipping}";
         }
 
         private void RenderEnv()
@@ -189,6 +190,7 @@ namespace DeepQL.Agents
         public int TrainRenderInterval = 0;
         // When not NaN, reward for step in which simulation ended will be overwritten with that value
         public float RewardOnDone = float.NaN;
+        public bool RewardClipping = false;
         // Used for controlling rendering FPS
         public int RenderFreq = 30;        
         public bool Verbose = false;
