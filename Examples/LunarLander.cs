@@ -31,7 +31,9 @@ namespace Examples
                 TrainRenderInterval = 10
             };
 
-            agent.Train(1500, 2000);
+            //agent.Train(1500, 2000);
+
+            agent.Load($"{agent.Name}_500");
 
             Console.WriteLine($"Average reward {agent.Test(10, 2000, true)}");
         }

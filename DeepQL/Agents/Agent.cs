@@ -198,7 +198,7 @@ namespace DeepQL.Agents
         public int StepsAverageN = 50;
 
         protected float Epsilon; // Exploration probability
-        private readonly string Name;
+        public readonly string Name;
         private List<string> LogLines = new List<string>();
     }
 }
