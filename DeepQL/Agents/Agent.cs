@@ -27,7 +27,7 @@ namespace DeepQL.Agents
         {
             Epsilon = MaxEpsilon;
 
-            var rewardChart = new Neuro.ChartGenerator($"{Name}_reward.png", $"{Name}\n({GetParametersDescription()})", "Episode");
+            var rewardChart = new Neuro.ChartGenerator($"{Name}_reward.png", $"{Name}\n{GetParametersDescription()}", "Episode");
             rewardChart.AddSeries(0, "Reward", System.Drawing.Color.LightGray);
             rewardChart.AddSeries(1, $"Avg({RewardAverageN}) reward", System.Drawing.Color.Blue);
             rewardChart.AddSeries(2, $"Avg({StepsAverageN}) steps per episode\n(right axis)", System.Drawing.Color.CornflowerBlue, true);
@@ -149,7 +149,7 @@ namespace DeepQL.Agents
 
         protected virtual string GetParametersDescription()
         {
-            return $"ε_max={MaxEpsilon} ε_decay/mode={EpsilonDecay}/{EpsilonDecayMode} train_int={TrainInterval} reward_clip={RewardClipping}";
+            return $"{GetType().Name}: ε_max={MaxEpsilon} ε_decay/mode={EpsilonDecay}/{EpsilonDecayMode} train_int={TrainInterval} reward_clip={RewardClipping}";
         }
 
         private void RenderEnv()
@@ -195,7 +195,7 @@ namespace DeepQL.Agents
         public int RenderFreq = 30;        
         public bool Verbose = false;
         public int RewardAverageN = 100;
-        public int StepsAverageN = 20;
+        public int StepsAverageN = 50;
 
         protected float Epsilon; // Exploration probability
         private readonly string Name;

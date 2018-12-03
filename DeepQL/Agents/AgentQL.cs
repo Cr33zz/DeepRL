@@ -35,7 +35,7 @@ namespace DeepQL.Agents
 
         protected override string GetParametersDescription()
         {
-            return $"{base.GetParametersDescription()} {ValueFuncModel.GetParametersDescription()}";
+            return $"{base.GetParametersDescription()}\n{ValueFuncModel.GetParametersDescription()}";
         }
 
         public override void Save(string filename)

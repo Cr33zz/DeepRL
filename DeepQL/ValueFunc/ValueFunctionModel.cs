@@ -19,7 +19,7 @@ namespace DeepQL.ValueFunc
         public virtual void OnEpisodeEnd(int episode) { }
         public virtual void SaveState(string filename) { }
         public virtual void LoadState(string filename) { }
-        public virtual string GetParametersDescription() { return $"lr={LearningRate} γ={DiscountFactor}"; }
+        public virtual string GetParametersDescription() { return $"{GetType().Name}: lr={LearningRate} γ={DiscountFactor}"; }
 
         protected readonly float LearningRate;
         protected readonly float DiscountFactor;

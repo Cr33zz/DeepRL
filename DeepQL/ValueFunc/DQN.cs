@@ -13,7 +13,7 @@ namespace DeepQL.ValueFunc
         public DQN(Shape inputShape, int numberOfActions, int[] hiddenLayersNeurons, float learningRate, float discountFactor, int replaySize)
             : this(inputShape, numberOfActions, learningRate, discountFactor, replaySize)
         {
-            Model = new NeuralNetwork("DQN_agent");
+            Model = new NeuralNetwork("dqn");
             Model.AddLayer(new Flatten(inputShape));
             for (int i = 0; i < hiddenLayersNeurons.Length; ++i)
                 Model.AddLayer(new Dense(Model.LastLayer, hiddenLayersNeurons[i], Activation.ReLU));
@@ -26,9 +26,9 @@ namespace DeepQL.ValueFunc
         {
             ReplayMem = new ReplayMemory(replaySize);
 
-            ErrorChart = new ChartGenerator($"DQN_agent_error", "Q prediction error", "Epoch");
-            ErrorChart.AddSeries(0, "MSE", System.Drawing.Color.LightGray);
-            ErrorChart.AddSeries(1, $"Avg({ErrorAvg.N}) MSE", System.Drawing.Color.Firebrick);
+            ErrorChart = new ChartGenerator($"dqn_error", "Q prediction error", "Epoch");
+            ErrorChart.AddSeries(0, "Abs error", System.Drawing.Color.LightGray);
+            ErrorChart.AddSeries(1, $"Avg({ErrorAvg.N}) abs error", System.Drawing.Color.Firebrick);
         }
 
         public override Tensor GetOptimalAction(Tensor state)
@@ -44,12 +44,18 @@ namespace DeepQL.ValueFunc
             if (globalStep % MemoryInterval == 0)
                 ReplayMem.Push(new Transition(state, action, reward, nextState, done));
 
-            if (UsingTargetModel && (globalStep % TargetModelUpdateInterval == 0))
+            if (UsingTargetModel)
             {
                 if (TargetModel == null)
                     TargetModel = Model.Clone();
 
-                Model.CopyParametersTo(TargetModel);
+                if (TargetModelUpdateInterval >= 1)
+                {
+                    if (globalStep % (int)TargetModelUpdateInterval == 0)
+                        Model.CopyParametersTo(TargetModel);
+                }
+                else
+                    Model.SoftCopyParametersTo(TargetModel, TargetModelUpdateInterval);
             }
         }
 
@@ -88,7 +94,7 @@ namespace DeepQL.ValueFunc
             Tensor rewards = Model.Predict(states); // this is our original prediction
             Tensor futureRewards = (UsingTargetModel ? TargetModel : Model).Predict(nextStates);
 
-            float totalSquareError = 0;
+            float totalError = 0;
 
             for (int i = 0; i < transitions.Count; ++i)
             {
@@ -99,41 +105,49 @@ namespace DeepQL.ValueFunc
                     reward += DiscountFactor * futureRewards.Max(i); // this is the expected prediction for selected action
 
                 float error = reward - rewards[0, (int)trans.Action[0], 0, i];
-                totalSquareError += error * error;
+                totalError += Math.Abs(error);
 
                 rewards[0, (int)trans.Action[0], 0, i] = reward;
             }
 
             if (ChartSaveInterval > 0)
             {
-                var meanSquareError = totalSquareError / transitions.Count;
-                ErrorAvg.Add(meanSquareError);
-                ErrorChart.AddData(TrainingsStep, meanSquareError, 0);
-                ErrorChart.AddData(TrainingsStep, ErrorAvg.Avg, 1);
-                if (TrainingsStep % ChartSaveInterval == 0)
+                var avgError = totalError / transitions.Count;
+                ErrorAvg.Add(avgError);
+                ErrorChart.AddData(TrainingsDone, avgError, 0);
+                ErrorChart.AddData(TrainingsDone, ErrorAvg.Avg, 1);
+                if (TrainingsDone % ChartSaveInterval == 0)
                     ErrorChart.Save();
             }
-            ++TrainingsStep;
+            ++TrainingsDone;
 
             Model.Fit(states, rewards, -1, TrainingEpochs, 0, Track.Nothing);
         }
 
-        public override string GetParametersDescription() { return $"{base.GetParametersDescription()} batch_size={BatchSize}"; }
+        public override string GetParametersDescription()
+        {
+            List<int> hiddenInputs = new List<int>();
+            for (int i = 1; i < Model.LayersCount; ++i)
+                hiddenInputs.Add(Model.Layer(i).InputShape.Length);
+
+            return $"{base.GetParametersDescription()} batch_size={BatchSize} train_epoch={TrainingEpochs} arch={string.Join("|", hiddenInputs)} memory_int={MemoryInterval} target_update_int={TargetModelUpdateInterval}";
+        }
 
         protected bool UsingTargetModel { get { return TargetModelUpdateInterval > 0; } }
 
         public int BatchSize = 32;
         public int TrainingEpochs = 1;
-        public int TargetModelUpdateInterval = 0;
+        // When interval is within (0,1) range, every step soft parameters copy will be performed, otherwise parameters will be copied every interval steps
+        public float TargetModelUpdateInterval = 0;
         public int MemoryInterval = 1;
         // Training loss will be clipped to [-DeltaClip, DeltaClip]
-        public float DeltaClip = float.PositiveInfinity;
+        //public float DeltaClip = float.PositiveInfinity;
         public int ChartSaveInterval = 200;
         protected NeuralNetwork Model;
         protected NeuralNetwork TargetModel;
         protected ReplayMemory ReplayMem;
         private readonly ChartGenerator ErrorChart;
         private readonly MovingAverage ErrorAvg = new MovingAverage(100);
-        private int TrainingsStep;
+        private int TrainingsDone;
     }
 }

@@ -12,7 +12,7 @@ namespace Examples
         {
             Env env = new LunarLanderEnv();
 
-            var qFunc = new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), new[]{ 64, 32 },  0.001f, 0.99f, 60000)
+            var qFunc = new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), new[]{ 128, 64 },  0.001f, 0.99f, 60000)
             {
                 BatchSize = 32,
                 MemoryInterval = 1,
@@ -20,7 +20,7 @@ namespace Examples
                 TrainingEpochs = 2
             };
 
-            Agent agent = new AgentQL("dqn_lunarlander(64,32)", env, qFunc)
+            Agent agent = new AgentQL("dqn_lunarlander", env, qFunc)
             {
                 WarmupSteps = 1000,
                 MaxEpsilon = 1.0f,
