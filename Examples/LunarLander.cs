@@ -12,11 +12,12 @@ namespace Examples
         {
             Env env = new LunarLanderEnv();
 
-            var qFunc = new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), new[]{ 128, 64 },  0.001f, 0.99f, 60000)
+            var qFunc = new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), new[]{ 128, 64 },  0.001f, 0.995f, 60000)
             {
                 BatchSize = 32,
                 MemoryInterval = 1,
-                TargetModelUpdateInterval = 50,
+                //TargetModelUpdateInterval = 400,
+                TargetModelUpdateOnEpisodeEnd = true,
                 TrainingEpochs = 2
             };
 
@@ -25,17 +26,17 @@ namespace Examples
                 WarmupSteps = 1000,
                 MaxEpsilon = 1.0f,
                 EpsilonDecay = 0.99f,
-                RewardClipping = false,
                 TrainInterval = 2,
+                RewardClipping = false,
+                TrainRenderInterval = 10,
                 Verbose = true,
-                TrainRenderInterval = 10
+                RenderFreq = 50,
             };
 
-            //agent.Train(1500, 2000);
+            //agent.Load($"{agent.Name}_500");
+            agent.Train(1500, 2000);
 
-            agent.Load($"{agent.Name}_500");
-
-            Console.WriteLine($"Average reward {agent.Test(10, 2000, true)}");
+            Console.WriteLine($"Average reward {agent.Test(100, 2000, true)}");
         }
     }
 }

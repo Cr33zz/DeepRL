@@ -149,7 +149,7 @@ namespace DeepQL.Agents
 
         protected virtual string GetParametersDescription()
         {
-            return $"{GetType().Name}: ε_max={MaxEpsilon} ε_decay/mode={EpsilonDecay}/{EpsilonDecayMode} train_int={TrainInterval} reward_clip={RewardClipping}";
+            return $"{GetType().Name}: ε_max={MaxEpsilon} ε_min={MinEpsilon} ε_decay/mode={EpsilonDecay}/{EpsilonDecayMode} train_int={TrainInterval} reward_clip={RewardClipping}";
         }
 
         private void RenderEnv()

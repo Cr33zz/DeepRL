@@ -49,13 +49,16 @@ namespace DeepQL.ValueFunc
                 if (TargetModel == null)
                     TargetModel = Model.Clone();
 
-                if (TargetModelUpdateInterval >= 1)
+                if (!TargetModelUpdateOnEpisodeEnd)
                 {
-                    if (globalStep % (int)TargetModelUpdateInterval == 0)
-                        Model.CopyParametersTo(TargetModel);
+                    if (TargetModelUpdateInterval >= 1)
+                    {
+                        if (globalStep % (int)TargetModelUpdateInterval == 0)
+                            Model.CopyParametersTo(TargetModel);
+                    }
+                    else
+                        Model.SoftCopyParametersTo(TargetModel, TargetModelUpdateInterval);
                 }
-                else
-                    Model.SoftCopyParametersTo(TargetModel, TargetModelUpdateInterval);
             }
         }
 
@@ -67,6 +70,20 @@ namespace DeepQL.ValueFunc
 
         public override void OnEpisodeEnd(int episode)
         {
+            if (TargetModelUpdateOnEpisodeEnd)
+                Model.CopyParametersTo(TargetModel);
+
+            //if (ChartSaveInterval > 0)
+            {
+                ErrorAvg.Add(PerEpisodeErrorAvg);
+
+                ErrorChart.AddData(episode, PerEpisodeErrorAvg, 0);
+                ErrorChart.AddData(episode, ErrorAvg.Avg, 1);
+                ErrorChart.Save();
+
+                PerEpisodeErrorAvg = 0;
+                TrainingsDone = 0;
+            }
         }
 
         public override void SaveState(string filename)
@@ -110,16 +127,9 @@ namespace DeepQL.ValueFunc
                 rewards[0, (int)trans.Action[0], 0, i] = reward;
             }
 
-            if (ChartSaveInterval > 0)
-            {
-                var avgError = totalError / transitions.Count;
-                ErrorAvg.Add(avgError);
-                ErrorChart.AddData(TrainingsDone, avgError, 0);
-                ErrorChart.AddData(TrainingsDone, ErrorAvg.Avg, 1);
-                if (TrainingsDone % ChartSaveInterval == 0)
-                    ErrorChart.Save();
-            }
+            var avgError = totalError / transitions.Count;
             ++TrainingsDone;
+            PerEpisodeErrorAvg += (avgError - PerEpisodeErrorAvg) / TrainingsDone;
 
             Model.Fit(states, rewards, -1, TrainingEpochs, 0, Track.Nothing);
         }
@@ -127,18 +137,19 @@ namespace DeepQL.ValueFunc
         public override string GetParametersDescription()
         {
             List<int> hiddenInputs = new List<int>();
-            for (int i = 1; i < Model.LayersCount; ++i)
+            for (int i = 2; i < Model.LayersCount; ++i)
                 hiddenInputs.Add(Model.Layer(i).InputShape.Length);
 
-            return $"{base.GetParametersDescription()} batch_size={BatchSize} train_epoch={TrainingEpochs} arch={string.Join("|", hiddenInputs)} memory_int={MemoryInterval} target_update_int={TargetModelUpdateInterval}";
+            return $"{base.GetParametersDescription()} batch_size={BatchSize} train_epoch={TrainingEpochs} arch={string.Join("|", hiddenInputs)} memory_int={MemoryInterval} target_upd_int={TargetModelUpdateInterval} target_upd_on_ep_end={TargetModelUpdateOnEpisodeEnd}";
         }
 
-        protected bool UsingTargetModel { get { return TargetModelUpdateInterval > 0; } }
+        protected bool UsingTargetModel { get { return TargetModelUpdateInterval > 0 || TargetModelUpdateOnEpisodeEnd; } }
 
         public int BatchSize = 32;
         public int TrainingEpochs = 1;
         // When interval is within (0,1) range, every step soft parameters copy will be performed, otherwise parameters will be copied every interval steps
         public float TargetModelUpdateInterval = 0;
+        public bool TargetModelUpdateOnEpisodeEnd = false;
         public int MemoryInterval = 1;
         // Training loss will be clipped to [-DeltaClip, DeltaClip]
         //public float DeltaClip = float.PositiveInfinity;
@@ -147,6 +158,7 @@ namespace DeepQL.ValueFunc
         protected NeuralNetwork TargetModel;
         protected ReplayMemory ReplayMem;
         private readonly ChartGenerator ErrorChart;
+        private float PerEpisodeErrorAvg;
         private readonly MovingAverage ErrorAvg = new MovingAverage(100);
         private int TrainingsDone;
     }
