@@ -40,6 +40,7 @@ namespace Examples
             agent.Train(1500, 2000);
 
             Console.WriteLine($"Average reward {agent.Test(100, 2000, true)}");
+            return;
         }
     }
 }
