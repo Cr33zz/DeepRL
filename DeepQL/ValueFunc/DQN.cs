@@ -26,7 +26,7 @@ namespace DeepQL.ValueFunc
         {
             ReplayMem = new ReplayMemory(replaySize);
 
-            ErrorChart = new ChartGenerator($"dqn_error", "Q prediction error", "Epoch");
+            ErrorChart = new ChartGenerator($"dqn_error", "Q prediction error", "Episode");
             ErrorChart.AddSeries(0, "Abs error", System.Drawing.Color.LightGray);
             ErrorChart.AddSeries(1, $"Avg({ErrorAvg.N}) abs error", System.Drawing.Color.Firebrick);
         }
@@ -73,7 +73,7 @@ namespace DeepQL.ValueFunc
             if (TargetModelUpdateOnEpisodeEnd)
                 Model.CopyParametersTo(TargetModel);
 
-            //if (ChartSaveInterval > 0)
+            if (TrainingsDone > 0)
             {
                 ErrorAvg.Add(PerEpisodeErrorAvg);
 
@@ -159,7 +159,7 @@ namespace DeepQL.ValueFunc
         protected ReplayMemory ReplayMem;
         private readonly ChartGenerator ErrorChart;
         private float PerEpisodeErrorAvg;
-        private readonly MovingAverage ErrorAvg = new MovingAverage(100);
+        private readonly MovingAverage ErrorAvg = new MovingAverage(20);
         private int TrainingsDone;
     }
 }

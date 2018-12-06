@@ -3,6 +3,7 @@ using DeepQL.Agents;
 using DeepQL.Environments;
 using DeepQL.Gyms;
 using DeepQL.ValueFunc;
+using Neuro.Tensors;
 
 namespace Examples
 {
@@ -10,15 +11,17 @@ namespace Examples
     {
         static void Main(string[] args)
         {
+            //Tensor.SetOpMode(Tensor.OpMode.GPU);
+
             Env env = new LunarLanderEnv();
 
-            var qFunc = new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), new[]{ 128, 64 },  0.001f, 0.995f, 60000)
+            var qFunc = new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), new[]{ 128, 64 },  0.0001f, 0.995f, 60000)
             {
                 BatchSize = 32,
                 MemoryInterval = 1,
-                //TargetModelUpdateInterval = 400,
-                TargetModelUpdateOnEpisodeEnd = true,
-                TrainingEpochs = 2
+                TargetModelUpdateInterval = 400,
+                //TargetModelUpdateOnEpisodeEnd = true,
+                TrainingEpochs = 1
             };
 
             Agent agent = new AgentQL("dqn_lunarlander", env, qFunc)
@@ -26,7 +29,7 @@ namespace Examples
                 WarmupSteps = 1000,
                 MaxEpsilon = 1.0f,
                 EpsilonDecay = 0.99f,
-                TrainInterval = 2,
+                TrainInterval = 1,
                 RewardClipping = false,
                 TrainRenderInterval = 10,
                 Verbose = true,

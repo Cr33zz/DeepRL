@@ -31,6 +31,7 @@ namespace DeepQL.Agents
             rewardChart.AddSeries(0, "Reward", System.Drawing.Color.LightGray);
             rewardChart.AddSeries(1, $"Avg({RewardAverageN}) reward", System.Drawing.Color.Blue);
             rewardChart.AddSeries(2, $"Avg({StepsAverageN}) steps per episode\n(right axis)", System.Drawing.Color.CornflowerBlue, true);
+            rewardChart.AddSeries(3, "Reward high score", System.Drawing.Color.DarkOrchid);
             var rewardAvg = new MovingAverage(RewardAverageN);
             var stepsAvg = new MovingAverage(StepsAverageN);
 
@@ -86,6 +87,12 @@ namespace DeepQL.Agents
                 rewardChart.AddData(ep, totalReward, 0);
                 rewardChart.AddData(ep, rewardAvg.Avg, 1);
                 rewardChart.AddData(ep, stepsAvg.Avg, 2);
+
+                if (totalReward > RewardHighScore)
+                {
+                    rewardChart.AddData(ep, totalReward, 3);
+                    RewardHighScore = totalReward;
+                }
 
                 if (SaveFreq > 0 && (ep % SaveFreq == 0))
                     Save($"{Name}_{ep}");
@@ -198,6 +205,7 @@ namespace DeepQL.Agents
         public int StepsAverageN = 50;
 
         protected float Epsilon; // Exploration probability
+        protected float RewardHighScore = float.MinValue;
         public readonly string Name;
         private List<string> LogLines = new List<string>();
     }
