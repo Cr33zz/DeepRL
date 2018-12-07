@@ -14,13 +14,16 @@ namespace DeepQL.Misc
         public void Add(float value)
         {
             if (Values.Count == N)
-                Values.Dequeue();
+                Values.RemoveLast();
 
-            Values.Enqueue(value);
+            Values.AddFirst(value);
         }
 
         public float AvgN(int n)
         {
+            if (Values.Count == 0)
+                return 0;
+
             float sum = 0;
             int i = 0;
             foreach (var v in Values)
@@ -28,7 +31,7 @@ namespace DeepQL.Misc
                 sum += v;
                 ++i;
 
-                if (i == v)
+                if (i == n)
                     break;
             }
             return sum / i;
@@ -42,6 +45,6 @@ namespace DeepQL.Misc
         public readonly int N;
         public float Avg => Values.Sum() / Values.Count;
 
-        private readonly Queue<float> Values = new Queue<float>();
+        private readonly LinkedList<float> Values = new LinkedList<float>();
     }
 }

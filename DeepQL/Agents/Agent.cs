@@ -103,7 +103,7 @@ namespace DeepQL.Agents
                 if (globalStep >= WarmupSteps && EpsilonDecayMode == EEpsilonDecayMode.EveryEpisode)
                     DecayEpsilon();
 
-                if (ep % 20 == 0)
+                if (ep % 10 == 0)
                     rewardChart.Save();
             }
 

@@ -34,10 +34,10 @@ namespace DeepQL
             return sample;
         }
 
+        public readonly int Capacity;
         public int StorageSize => Memory.Count;
 
         private List<Transition> Memory = new List<Transition>();
         private int NextIndex;
-        private readonly int Capacity;
     }
 }
