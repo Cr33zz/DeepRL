@@ -111,8 +111,8 @@
     <Compile Include="ValueFunc\ValueFunctionModel.cs" />
     <Compile Include="ValueFunc\DQN.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ReplayMemory.cs" />
-    <Compile Include="Transition.cs" />
+    <Compile Include="ExperienceReplay.cs" />
+    <Compile Include="Experience.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

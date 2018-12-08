@@ -2,9 +2,9 @@
 
 namespace DeepQL
 {
-    public class Transition
+    public class Experience
     {
-        public Transition(Tensor state, Tensor action, float reward, Tensor nextState, bool done)
+        public Experience(Tensor state, Tensor action, float reward, Tensor nextState, bool done)
         {
             State = state;
             Action = action;

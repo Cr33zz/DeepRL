@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace DeepQL
 {
-    public class ReplayMemory
+    public class ExperienceReplay
     {
-        public ReplayMemory(int capacity)
+        public ExperienceReplay(int capacity)
         {
             Capacity = capacity;
         }
 
-        public void Push(Transition trans)
+        public void Push(Experience trans)
         {
             if (trans == null)
                 throw new ArgumentNullException();
@@ -26,9 +26,9 @@ namespace DeepQL
             NextIndex = (NextIndex + 1) % Capacity;
         }
 
-        public List<Transition> Sample(int batchSize)
+        public List<Experience> Sample(int batchSize)
         {
-            var sample = new List<Transition>();
+            var sample = new List<Experience>();
             for (int i = 0; i < batchSize; ++i)
                 sample.Add(Memory[GlobalRandom.Rng.Next(StorageSize)]);
             return sample;
@@ -37,7 +37,7 @@ namespace DeepQL
         public readonly int Capacity;
         public int StorageSize => Memory.Count;
 
-        private List<Transition> Memory = new List<Transition>();
+        private List<Experience> Memory = new List<Experience>();
         private int NextIndex;
     }
 }
