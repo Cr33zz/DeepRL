@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using DeepQL.MemoryReplays;
 using DeepQL.Misc;
 using Neuro;
 using Neuro.Layers;

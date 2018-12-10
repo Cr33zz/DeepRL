@@ -20,7 +20,7 @@ namespace Examples
                 BatchSize = 32,
                 MemoryInterval = 1,
                 EnableDoubleDQN = true,
-                TargetModelUpdateInterval = 2000,
+                TargetModelUpdateInterval = 4000,
                 //TargetModelUpdateOnEpisodeEnd = true,
                 TrainingEpochs = 1
             };

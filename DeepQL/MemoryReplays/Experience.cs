@@ -1,6 +1,6 @@
 ﻿using Neuro.Tensors;
 
-namespace DeepQL
+namespace DeepQL.MemoryReplays
 {
     public class Experience
     {

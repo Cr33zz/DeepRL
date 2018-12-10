@@ -94,6 +94,8 @@
     <Compile Include="Gyms\LunarLanderEnv.cs" />
     <Compile Include="Gyms\MountainCarEnv.cs" />
     <Compile Include="Gyms\PendulumEnv.cs" />
+    <Compile Include="MemoryReplays\PriorityExperience.cs" />
+    <Compile Include="MemoryReplays\PriorityExperienceReplay.cs" />
     <Compile Include="Misc\GlobalRandom.cs" />
     <Compile Include="Gyms\CartPoleEnv.cs" />
     <Compile Include="Gyms\TaxiEnv.cs" />
@@ -111,8 +113,8 @@
     <Compile Include="ValueFunc\ValueFunctionModel.cs" />
     <Compile Include="ValueFunc\DQN.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ExperienceReplay.cs" />
-    <Compile Include="Experience.cs" />
+    <Compile Include="MemoryReplays\ExperienceReplay.cs" />
+    <Compile Include="MemoryReplays\Experience.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using DeepQL.MemoryReplays;
 using Neuro.Tensors;
 
 namespace DeepQL.Tests

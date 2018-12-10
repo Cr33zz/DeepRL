@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using DeepQL.MemoryReplays;
 using Neuro;
 using Neuro.Layers;
 using Neuro.Tensors;
