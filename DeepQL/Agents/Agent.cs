@@ -98,7 +98,7 @@ namespace DeepQL.Agents
                     Save($"{Name}_{ep}");
 
                 if (Verbose)
-                    LogLine($"Episode: {ep}  reward(avg): {Math.Round(totalReward, 2)}({Math.Round(rewardAvg.Avg, 2)})  steps: {step}  ε: {Math.Round(Epsilon, 4)}");
+                    LogLine($"Episode: {ep} reward(avg): {Math.Round(totalReward, 2)}({Math.Round(rewardAvg.Avg, 2)}) steps: {step} ε: {Math.Round(Epsilon, 4)} total_steps: {globalStep}");
 
                 if (globalStep >= WarmupSteps && EpsilonDecayMode == EEpsilonDecayMode.EveryEpisode)
                     DecayEpsilon();
@@ -113,7 +113,7 @@ namespace DeepQL.Agents
 
         public float Test(int episodes, int maxStepsPerEpisode, bool render)
         {
-            float[] totalRewards = new float[episodes];
+            var rewardAvg = new MovingAverage(episodes);
 
             for (int ep = 0; ep < episodes; ++ep)
             {
@@ -136,14 +136,14 @@ namespace DeepQL.Agents
                         break;
                 }
 
-                totalRewards[ep] = totalReward;
+                rewardAvg.Add(totalReward);
 
                 if (Verbose)
-                    LogLine($"Episode: {ep}  reward: {Math.Round(totalReward, 2)}  steps: {step}");
+                    LogLine($"Episode: {ep} reward(avg): {Math.Round(totalReward, 2)}({Math.Round(rewardAvg.Avg, 2)}) steps: {step}");
             }
 
             SaveLog();
-            return totalRewards.Sum() / episodes;
+            return rewardAvg.Avg;
         }
 
         public virtual void Save(string filename) { }
