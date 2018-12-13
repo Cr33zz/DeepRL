@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace DeepQL.MemoryReplays
 {
-    internal class SumTree
+    public class SumTree
     {
         public SumTree(int capacity)
         {
@@ -17,17 +17,17 @@ namespace DeepQL.MemoryReplays
             if (trans == null)
                 throw new ArgumentNullException();
 
-            int leafTreeIndex = NextIndex + Capacity - 1;
+            int leafTreeIndex = DataIndex + Capacity - 1;
 
+            Memory[DataIndex] = trans;
             trans.Index = leafTreeIndex;
-            Memory[NextIndex] = trans;
 
             Update(leafTreeIndex, priority);
 
-            ++NextIndex;
+            ++DataIndex;
 
-            if (NextIndex >= Capacity)
-                NextIndex = 0;
+            if (DataIndex >= Capacity)
+                DataIndex = 0;
         }
 
         public Experience GetLeaf(float v, out float priority)
@@ -95,10 +95,16 @@ namespace DeepQL.MemoryReplays
             return Tree.Skip(Capacity - 1).Take(validElementsCount).Min();
         }
 
+        // this method is used in unit tests
+        public float GetNodeValue(int index)
+        {
+            return Tree[index];
+        }
+
         public readonly int Capacity;
 
         private readonly float[] Tree;
         private readonly Experience[] Memory;
-        private int NextIndex;
+        private int DataIndex;
     }
 }

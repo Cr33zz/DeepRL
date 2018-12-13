@@ -74,6 +74,7 @@
   <ItemGroup>
     <Compile Include="ReplayMemoryTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SumTreeTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

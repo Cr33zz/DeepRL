@@ -74,6 +74,11 @@ namespace DeepQL.MemoryReplays
             return Size;
         }
 
+        public override string GetParametersDescription()
+        {
+            return $"{base.GetParametersDescription()} α={Alpha} β={Beta} β_increment={BetaIncrement} ε={Epsilon} max_error={MaxError}";
+        }
+
         private readonly SumTree Tree;
         
         // Hyper-parameter used to make a trade off between taking only exp with high priority and sampling randomly (uniform selection when 0)

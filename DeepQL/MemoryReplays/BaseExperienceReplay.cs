@@ -14,6 +14,8 @@ namespace DeepQL.MemoryReplays
         public virtual void Update(List<Experience> samples, List<float> absErrors) {}
         public abstract int GetSize();
 
+        public virtual string GetParametersDescription() { return $"{GetType().Name}: capacity={Capacity}"; }
+
         public readonly int Capacity;
     }
 }

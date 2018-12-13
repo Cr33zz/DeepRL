@@ -165,7 +165,7 @@ namespace DeepQL.ValueFunc
             for (int i = 2; i < Model.LayersCount; ++i)
                 hiddenInputs.Add(Model.Layer(i).InputShape.Length);
 
-            return $"{base.GetParametersDescription()} batch_size={BatchSize} arch={string.Join("|", hiddenInputs)} memory_size={Memory.Capacity} train_epoch={TrainingEpochs} memory_int={MemoryInterval} double_dqn={EnableDoubleDQN} dueling_dqn={EnableDuelingDQN} target_upd_int={TargetModelUpdateInterval} target_upd_on_ep_end={TargetModelUpdateOnEpisodeEnd}";
+            return $"{base.GetParametersDescription()} batch_size={BatchSize} arch={string.Join("|", hiddenInputs)} target_upd_int={TargetModelUpdateInterval} double_dqn={EnableDoubleDQN} dueling_dqn={EnableDuelingDQN} train_epoch={TrainingEpochs} memory_int={MemoryInterval} target_upd_on_ep_end={TargetModelUpdateOnEpisodeEnd}\n{Memory.GetParametersDescription()}";
         }
 
         public int BatchSize;

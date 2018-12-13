@@ -27,7 +27,7 @@ namespace DeepQL.Agents
         {
             Epsilon = MaxEpsilon;
 
-            var rewardChart = new Neuro.ChartGenerator($"{Name}_reward.png", $"{Name}\n{GetParametersDescription()}", "Episode");
+            var rewardChart = new Neuro.ChartGenerator($"{Name}_reward", $"{Name}\n{GetParametersDescription()}", "Episode");
             rewardChart.AddSeries(0, "Reward", System.Drawing.Color.LightGray);
             rewardChart.AddSeries(1, $"Avg({RewardAverageN}) reward", System.Drawing.Color.Blue);
             rewardChart.AddSeries(2, $"Avg({StepsAverageN}) steps per episode\n(right axis)", System.Drawing.Color.CornflowerBlue, true);

@@ -28,7 +28,7 @@ namespace Examples
             {
                 WarmupSteps = 5000,
                 MaxEpsilon = 1.0f,
-                MinEpsilon = 0.05f,
+                MinEpsilon = 0.01f,
                 EpsilonDecay = 0.995f,
                 TrainInterval = 1,
                 RewardClipping = false,
