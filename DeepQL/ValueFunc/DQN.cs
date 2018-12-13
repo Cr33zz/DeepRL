@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using DeepQL.MemoryReplays;
 using DeepQL.Misc;
 using Neuro;
@@ -11,22 +12,24 @@ namespace DeepQL.ValueFunc
 {
     public class DQN : ValueFunctionModel
     {
-        public DQN(Shape inputShape, int numberOfActions, int[] hiddenLayersNeurons, float learningRate, float discountFactor, int replaySize)
-            : this(inputShape, numberOfActions, learningRate, discountFactor, replaySize)
+        public DQN(Shape inputShape, int numberOfActions, int[] hiddenLayersNeurons, float learningRate, float discountFactor, int batchSize, BaseExperienceReplay memory)
+            : this(inputShape, numberOfActions, learningRate, discountFactor, batchSize, memory)
         {
+            ImportanceSamplingWeights = new Tensor(new Shape(1, numberOfActions, 1, batchSize));
+
             Model = new NeuralNetwork("dqn");
             Model.AddLayer(new Flatten(inputShape));
             for (int i = 0; i < hiddenLayersNeurons.Length; ++i)
                 Model.AddLayer(new Dense(Model.LastLayer, hiddenLayersNeurons[i], Activation.ReLU));
             Model.AddLayer(new Dense(Model.LastLayer, numberOfActions, Activation.Linear));
-            Model.Optimize(new Adam(learningRate), Loss.Huber1);
+            Model.Optimize(new Adam(learningRate), new CustomHuberLoss(ImportanceSamplingWeights));
         }
 
-        protected DQN(Shape inputShape, int numberOfActions, float learningRate, float discountFactor, int replaySize)
+        protected DQN(Shape inputShape, int numberOfActions, float learningRate, float discountFactor, int batchSize, BaseExperienceReplay memory)
             : base(inputShape, numberOfActions, learningRate, discountFactor)
         {
-            ReplayMem = new ExperienceReplay(replaySize);
-
+            BatchSize = batchSize;
+            Memory = memory;
             ErrorChart = new ChartGenerator($"dqn_error", "Q prediction error", "Episode");
             ErrorChart.AddSeries(0, "Abs error", System.Drawing.Color.LightGray);
             ErrorChart.AddSeries(1, $"Avg({ErrorAvg.N}) abs error", System.Drawing.Color.Firebrick);
@@ -43,7 +46,7 @@ namespace DeepQL.ValueFunc
         public override void OnStep(int step, int globalStep, Tensor state, Tensor action, float reward, Tensor nextState, bool done)
         {
             if (globalStep % MemoryInterval == 0)
-                ReplayMem.Push(new Experience(state, action, reward, nextState, done));
+                Memory.Push(new Experience(state, action, reward, nextState, done));
 
             if (TargetModelUpdateInterval <= 0)
                 throw new Exception("Target model update has to be positive.");
@@ -65,8 +68,8 @@ namespace DeepQL.ValueFunc
 
         public override void OnTrain()
         {
-            if (ReplayMem.StorageSize >= BatchSize)
-                Train(ReplayMem.Sample(BatchSize));
+            if (Memory.GetSize() >= BatchSize)
+                Train(Memory.Sample(BatchSize));
         }
 
         public override void OnEpisodeEnd(int episode)
@@ -117,7 +120,8 @@ namespace DeepQL.ValueFunc
             Tensor futureRewardsBatch = EnableDoubleDQN ? Model.Predict(nextStatesBatch) : null;
             Tensor futureTargetRewardsBatch = TargetModel.Predict(nextStatesBatch);
 
-            float totalError = 0;
+            List<float> absErrors = new List<float>();
+            ImportanceSamplingWeights.Zero();
 
             for (int i = 0; i < experiences.Count; ++i)
             {
@@ -140,12 +144,15 @@ namespace DeepQL.ValueFunc
                     estimatedReward += DiscountFactor * futureReward;
 
                 float error = estimatedReward - rewardsBatch[0, (int)e.Action[0], 0, i];
-                totalError += Math.Abs(error);
+                absErrors.Add(Math.Abs(error));
 
                 rewardsBatch[0, (int)e.Action[0], 0, i] = estimatedReward;
+                ImportanceSamplingWeights[0, (int)e.Action[0], 0, i] = e.ImportanceSamplingWeight;
             }
 
-            var avgError = totalError / experiences.Count;
+            Memory.Update(experiences, absErrors);
+
+            var avgError = absErrors.Sum() / experiences.Count;
             ++TrainingsDone;
             PerEpisodeErrorAvg += (avgError - PerEpisodeErrorAvg) / TrainingsDone;
 
@@ -158,10 +165,10 @@ namespace DeepQL.ValueFunc
             for (int i = 2; i < Model.LayersCount; ++i)
                 hiddenInputs.Add(Model.Layer(i).InputShape.Length);
 
-            return $"{base.GetParametersDescription()} batch_size={BatchSize} arch={string.Join("|", hiddenInputs)} memory_size={ReplayMem.Capacity} train_epoch={TrainingEpochs} memory_int={MemoryInterval} double_dqn={EnableDoubleDQN} dueling_dqn={EnableDuelingDQN} target_upd_int={TargetModelUpdateInterval} target_upd_on_ep_end={TargetModelUpdateOnEpisodeEnd}";
+            return $"{base.GetParametersDescription()} batch_size={BatchSize} arch={string.Join("|", hiddenInputs)} memory_size={Memory.Capacity} train_epoch={TrainingEpochs} memory_int={MemoryInterval} double_dqn={EnableDoubleDQN} dueling_dqn={EnableDuelingDQN} target_upd_int={TargetModelUpdateInterval} target_upd_on_ep_end={TargetModelUpdateOnEpisodeEnd}";
         }
 
-        public int BatchSize = 32;
+        public int BatchSize;
         public int TrainingEpochs = 1;
         // When interval is within (0,1) range, every step soft parameters copy will be performed, otherwise parameters will be copied every interval steps
         public float TargetModelUpdateInterval = 1;
@@ -174,10 +181,30 @@ namespace DeepQL.ValueFunc
         //public int ChartSaveInterval = 200;
         protected NeuralNetwork Model;
         protected NeuralNetwork TargetModel;
-        protected ExperienceReplay ReplayMem;
+        protected BaseExperienceReplay Memory;
+
         private readonly ChartGenerator ErrorChart;
         private float PerEpisodeErrorAvg;
         private readonly MovingAverage ErrorAvg = new MovingAverage(20);
         private int TrainingsDone;
+        private Tensor ImportanceSamplingWeights;
     }
+
+    internal class CustomHuberLoss : Huber
+    {
+        public CustomHuberLoss(Tensor importanceSamplingWeights)
+            : base(1)
+        {
+            ImportanceSamplingWeights = importanceSamplingWeights;
+        }
+
+        public override void Derivative(Tensor targetOutput, Tensor output, Tensor result)
+        {
+            base.Derivative(targetOutput, output, result);
+            result.MulElem(ImportanceSamplingWeights, result);
+        }
+
+        private Tensor ImportanceSamplingWeights;
+    }
+
 }

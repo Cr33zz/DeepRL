@@ -1,19 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DeepQL.MemoryReplays
 {
-    public class ExperienceReplay
+    public class ExperienceReplay : BaseExperienceReplay
     {
         public ExperienceReplay(int capacity)
+            : base(capacity)
         {
-            Capacity = capacity;
         }
 
-        public void Push(Experience trans)
+        public override void Push(Experience trans)
         {
             if (trans == null)
                 throw new ArgumentNullException();
@@ -26,18 +23,20 @@ namespace DeepQL.MemoryReplays
             NextIndex = (NextIndex + 1) % Capacity;
         }
 
-        public List<Experience> Sample(int batchSize)
+        public override List<Experience> Sample(int batchSize)
         {
             var sample = new List<Experience>();
             for (int i = 0; i < batchSize; ++i)
-                sample.Add(Memory[GlobalRandom.Rng.Next(StorageSize)]);
+                sample.Add(Memory[GlobalRandom.Rng.Next(GetSize())]);
             return sample;
         }
 
-        public readonly int Capacity;
-        public int StorageSize => Memory.Count;
+        public override int GetSize()
+        {
+            return Memory.Count;
+        }
 
-        private List<Experience> Memory = new List<Experience>();
+        private readonly List<Experience> Memory = new List<Experience>();
         private int NextIndex;
     }
 }

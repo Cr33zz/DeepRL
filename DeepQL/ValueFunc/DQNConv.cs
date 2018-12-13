@@ -8,8 +8,8 @@ namespace DeepQL.ValueFunc
 {
     public class DQNConv : DQN
     {
-        public DQNConv(Shape inputShape, int numberOfActions, float learningRate, float discountFactor, int replaySize)
-            :base(inputShape, numberOfActions, learningRate, discountFactor, replaySize)
+        public DQNConv(Shape inputShape, int numberOfActions, float learningRate, float discountFactor, int batchSize, BaseExperienceReplay memory)
+            :base(inputShape, numberOfActions, learningRate, discountFactor, batchSize, memory)
         {
             Model = new NeuralNetwork("DQNConv");
             Model.AddLayer(new Convolution(inputShape, 8, 32, 2, Activation.ELU));
@@ -23,7 +23,7 @@ namespace DeepQL.ValueFunc
         public override void OnStep(int step, int globalStep, Tensor state, Tensor action, float reward, Tensor nextState, bool done)
         {
             UpdateTemporalData(state);
-            ReplayMem.Push(new Experience(Tensor.Merge(TemporalData, 4), action, reward, nextState, done));
+            Memory.Push(new Experience(Tensor.Merge(TemporalData, 4), action, reward, nextState, done));
         }
 
         //protected override void Train(List<Transition> transitions)

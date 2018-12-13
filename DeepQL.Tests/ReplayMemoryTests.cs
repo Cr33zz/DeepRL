@@ -20,9 +20,9 @@ namespace DeepQL.Tests
         public void Push_Valid_Transition()
         {
             ExperienceReplay memory = new ExperienceReplay(1);
-            Assert.AreEqual(memory.StorageSize, 0);
+            Assert.AreEqual(memory.GetSize(), 0);
             AddRandomTransitions(memory, 1);
-            Assert.AreEqual(memory.StorageSize, 1);
+            Assert.AreEqual(memory.GetSize(), 1);
         }
 
         [TestMethod]
@@ -30,7 +30,7 @@ namespace DeepQL.Tests
         {
             ExperienceReplay memory = new ExperienceReplay(10);
             AddRandomTransitions(memory, 15);
-            Assert.AreEqual(memory.StorageSize, 10);
+            Assert.AreEqual(memory.GetSize(), 10);
         }
 
         [TestMethod]

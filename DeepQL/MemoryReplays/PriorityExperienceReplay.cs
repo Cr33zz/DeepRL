@@ -1,97 +1,88 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DeepQL.MemoryReplays
 {
-    public class PriorityExperienceReplay
+    public class PriorityExperienceReplay : BaseExperienceReplay
     {
-        public PriorityExperienceReplay(int capacity)
+        public PriorityExperienceReplay(int capacity, float alpha = 0.6f, float beta = 0.4f)
+            : base(capacity)
         {
-            Capacity = capacity;
-            Tree = new float[2 * capacity - 1];
-            Memory = new Experience[capacity];
+            Tree = new SumTree(capacity);
+            Alpha = alpha;
+            Beta = beta;
         }
 
-        public void Push(Experience trans, float priority)
+        public override void Push(Experience trans)
         {
             if (trans == null)
                 throw new ArgumentNullException();
 
-            int leafTreeIndex = NextIndex + Capacity - 1;
+            float maxPriority = Tree.GetMaxPriority(Size);
 
-            Memory[NextIndex] = trans;
+            if (maxPriority == 0)
+                maxPriority = MaxError;
 
-            Update(leafTreeIndex, priority);
+            Tree.Add(trans, maxPriority);
 
-            ++NextIndex;
-
-            if (NextIndex >= Capacity)
-                NextIndex = 0;
+            if (Size < Capacity)
+                ++Size;
         }
 
-        public List<Experience> Sample(int batchSize)
+        public override List<Experience> Sample(int batchSize)
         {
             var sample = new List<Experience>();
-            
-            // todo
+
+            float prioritySegment = Tree.GetTotalPriority() / batchSize;
+
+            Beta += BetaIncrement;
+            if (Beta > 1)
+                Beta = 1;
+
+            float pMin = Tree.GetMinPriority(Size) / Tree.GetTotalPriority();
+            float maxWeight = (float)Math.Pow(pMin * batchSize, -Beta);
+
+            for (int i = 0; i < batchSize; ++i)
+            {
+                // sample value uniformly from each priority segment range
+                float value = GlobalRandom.Rng.NextFloat(prioritySegment * i, prioritySegment * (i + 1));
+
+                var exp = Tree.GetLeaf(value, out var priority);
+
+                float samplingProb = priority / Tree.GetTotalPriority();
+                exp.ImportanceSamplingWeight = (float)Math.Pow(batchSize * samplingProb, -Beta) / maxWeight;
+
+                sample.Add(exp);
+            }
 
             return sample;
         }
 
-        private Experience SampleLeaf(float priorityValue)
+        public override void Update(List<Experience> samples, List<float> absErrors)
         {
-            int leafIndex = 0;
-            int parentIndex = 0;
-
-            while (true)
+            for (int i = 0; i < samples.Count; ++i)
             {
-                int leftChildIndex = 2 * parentIndex + 1;
-                int rightChildIndex = leftChildIndex + 1;
-
-                if (leftChildIndex >= Tree.Length)
-                {
-                    leafIndex = parentIndex;
-                    break;
-                }
-                else
-                {
-                    if (priorityValue <= Tree[leftChildIndex])
-                    {
-                        parentIndex = leftChildIndex;
-                    }
-                    else
-                    {
-                        priorityValue -= Tree[leftChildIndex];
-                        parentIndex = rightChildIndex;
-                    }
-                }
-            }
-
-            int memoryIndex = leafIndex - Capacity + 1;
-            return Memory[memoryIndex];
-        }
-
-        private void Update(int leafTreeIndex, float priority)
-        {
-            float priorityChange = priority - Tree[leafTreeIndex];
-            Tree[leafTreeIndex] = priority;
-
-            int treeIndex = leafTreeIndex;
-            while (treeIndex != 0)
-            {
-                //parent tree index
-                treeIndex = (int)Math.Floor((treeIndex - 1) / 2.0);
-                Tree[treeIndex] += priorityChange;
+                float clippedAbsError = Math.Min(absErrors[i] + Epsilon, MaxError);
+                float priority = (float) Math.Pow(clippedAbsError, Alpha);
+                Tree.Update(samples[i].Index, priority);
             }
         }
 
-        public readonly int Capacity;
+        public override int GetSize()
+        {
+            return Size;
+        }
 
-        private float[] Tree;
-        private Experience[] Memory;
-        private int NextIndex;
-    }
+        private readonly SumTree Tree;
+        
+        // Hyper-parameter used to make a trade off between taking only exp with high priority and sampling randomly (uniform selection when 0)
+        private readonly float Alpha;
+        // Importance-sampling, it will be annealing from initial value to 1 every time we sample from memory
+        private float Beta;
+        private readonly float BetaIncrement = 0.001f;
+        private readonly float Epsilon = 0.01f;
+        private readonly float MaxError = 1;
+        private int Size;
+    }    
 }

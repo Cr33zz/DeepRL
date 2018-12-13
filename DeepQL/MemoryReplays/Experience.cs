@@ -18,5 +18,7 @@ namespace DeepQL.MemoryReplays
         public readonly Tensor NextState;
         public readonly float Reward;
         public readonly bool Done;
+        public int Index; // index in internal replay storage
+        public float ImportanceSamplingWeight = 1; // a.k.a. importance sampling, used to scale how much this sample's error will affect learning
     }
 }

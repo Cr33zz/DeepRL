@@ -94,8 +94,9 @@
     <Compile Include="Gyms\LunarLanderEnv.cs" />
     <Compile Include="Gyms\MountainCarEnv.cs" />
     <Compile Include="Gyms\PendulumEnv.cs" />
-    <Compile Include="MemoryReplays\PriorityExperience.cs" />
+    <Compile Include="MemoryReplays\BaseExperienceReplay.cs" />
     <Compile Include="MemoryReplays\PriorityExperienceReplay.cs" />
+    <Compile Include="MemoryReplays\SumTree.cs" />
     <Compile Include="Misc\GlobalRandom.cs" />
     <Compile Include="Gyms\CartPoleEnv.cs" />
     <Compile Include="Gyms\TaxiEnv.cs" />
