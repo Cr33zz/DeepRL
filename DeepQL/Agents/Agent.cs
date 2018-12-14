@@ -98,7 +98,7 @@ namespace DeepQL.Agents
                     Save($"{Name}_{ep}");
 
                 if (Verbose)
-                    LogLine($"Episode: {ep} reward(avg): {Math.Round(totalReward, 2)}({Math.Round(rewardAvg.Avg, 2)}) steps: {step} ε: {Math.Round(Epsilon, 4)} total_steps: {globalStep}");
+                    LogLine($"Ep# {ep} reward(avg): {Math.Round(totalReward, 2)}({Math.Round(rewardAvg.Avg, 2)}) steps: {step} ε: {Math.Round(Epsilon, 4)} total_steps: {globalStep}");
 
                 if (globalStep >= WarmupSteps && EpsilonDecayMode == EEpsilonDecayMode.EveryEpisode)
                     DecayEpsilon();
@@ -139,7 +139,7 @@ namespace DeepQL.Agents
                 rewardAvg.Add(totalReward);
 
                 if (Verbose)
-                    LogLine($"Episode: {ep} reward(avg): {Math.Round(totalReward, 2)}({Math.Round(rewardAvg.Avg, 2)}) steps: {step}");
+                    LogLine($"Ep# {ep} reward(avg): {Math.Round(totalReward, 2)}({Math.Round(rewardAvg.Avg, 2)}) steps: {step}");
             }
 
             SaveLog();

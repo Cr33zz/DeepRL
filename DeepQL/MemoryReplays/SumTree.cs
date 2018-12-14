@@ -17,17 +17,17 @@ namespace DeepQL.MemoryReplays
             if (trans == null)
                 throw new ArgumentNullException();
 
-            int leafTreeIndex = DataIndex + Capacity - 1;
+            int leafTreeIndex = NextDataIndex + Capacity - 1;
 
-            Memory[DataIndex] = trans;
+            Memory[NextDataIndex] = trans;
             trans.Index = leafTreeIndex;
 
             Update(leafTreeIndex, priority);
 
-            ++DataIndex;
+            ++NextDataIndex;
 
-            if (DataIndex >= Capacity)
-                DataIndex = 0;
+            if (NextDataIndex >= Capacity)
+                NextDataIndex = 0;
         }
 
         public Experience GetLeaf(float v, out float priority)
@@ -50,6 +50,13 @@ namespace DeepQL.MemoryReplays
                 {
                     parentIndex = leftChildIndex;
                 }
+                // there is a number error introduced by multiple substractions thus for v close to total priority we may end up with wrong/null experience selected
+                // that's why we have to check right child priority and then correct v
+                else if (Tree[rightChildIndex] == 0)
+                {
+                    parentIndex = leftChildIndex;
+                    v = Tree[leftChildIndex];
+                }
                 else
                 {
                     v -= Tree[leftChildIndex];
@@ -58,8 +65,8 @@ namespace DeepQL.MemoryReplays
             }
 
             priority = Tree[leafIndex];
-            int memoryIndex = leafIndex - Capacity + 1;
-            return Memory[memoryIndex];
+            int dataIndex = leafIndex - Capacity + 1;
+            return Memory[dataIndex];
         }
 
         public void Update(int leafTreeIndex, float priority)
@@ -105,6 +112,6 @@ namespace DeepQL.MemoryReplays
 
         private readonly float[] Tree;
         private readonly Experience[] Memory;
-        private int DataIndex;
+        private int NextDataIndex;
     }
 }
