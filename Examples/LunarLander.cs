@@ -11,16 +11,15 @@ namespace Examples
     {
         static void Main(string[] args)
         {
-            //Tensor.SetOpMode(Tensor.OpMode.GPU);
-
             Env env = new LunarLanderEnv();
 
-            var qFunc = new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), new[]{ 128, 64 },  0.0001f, 0.999f, 32, new PriorityExperienceReplay(100000))
+            var memory = new PriorityExperienceReplay(100000);
+
+            var qFunc = new DQN(env.ObservationSpace.Shape, env.ActionSpace.NumberOfValues(), new[]{ 256, 128 },  0.0001f, 0.999f, 32, memory)
             {
                 MemoryInterval = 1,
                 EnableDoubleDQN = true,
                 TargetModelUpdateInterval = 4000,
-                //TargetModelUpdateOnEpisodeEnd = true,
                 TrainingEpochs = 1
             };
 
@@ -34,15 +33,12 @@ namespace Examples
                 RewardClipping = false,
                 TrainRenderInterval = 10,
                 Verbose = true,
-                RenderFreq = 50,
+                RenderFreq = 80,
             };
 
-            //agent.Load($"{agent.Name}_1500");
-
-            agent.Train(1500, 2000);
-
-            Console.WriteLine($"Average reward {agent.Test(100, 1000, true)}");
-            return;
+            //agent.Train(1500, 1500);
+            agent.Load($"{agent.Name}_1500");
+            agent.Test(100, 400, 2);
         }
     }
 }

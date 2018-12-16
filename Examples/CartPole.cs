@@ -28,7 +28,7 @@ namespace Examples
                 WarmupSteps = 1000
             };
             agent.Train(300, 500);
-            Console.WriteLine($"Average reward {agent.Test(50, 300, false)}");
+            Console.WriteLine($"Average reward {agent.Test(50, 300, 0)}");
 
             //while (!env.Step((int)env.ActionSpace.Sample()[0], out var nextState, out var reward))
             //{

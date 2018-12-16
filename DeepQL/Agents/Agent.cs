@@ -111,12 +111,14 @@ namespace DeepQL.Agents
             SaveLog();
         }
 
-        public float Test(int episodes, int maxStepsPerEpisode, bool render)
+        public float Test(int episodes, int maxStepsPerEpisode, int renderInterval)
         {
             var rewardAvg = new MovingAverage(episodes);
 
             for (int ep = 0; ep < episodes; ++ep)
             {
+                bool render = renderInterval > 0 && (ep % renderInterval) == 0;
+
                 LastObservation = Env.Reset();
                 float totalReward = 0;
                 int step = 0;
@@ -139,7 +141,7 @@ namespace DeepQL.Agents
                 rewardAvg.Add(totalReward);
 
                 if (Verbose)
-                    LogLine($"Ep# {ep} reward(avg): {Math.Round(totalReward, 2)}({Math.Round(rewardAvg.Avg, 2)}) steps: {step}");
+                    LogLine($"Test# {ep} reward(avg): {Math.Round(totalReward, 2)}({Math.Round(rewardAvg.Avg, 2)}) steps: {step}");
             }
 
             SaveLog();
