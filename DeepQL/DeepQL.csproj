@@ -110,6 +110,7 @@
     <Compile Include="Spaces\Discrete.cs" />
     <Compile Include="Spaces\Space.cs" />
     <Compile Include="ValueFunc\DQNConv.cs" />
+    <Compile Include="ValueFunc\DuelingDQN.cs" />
     <Compile Include="ValueFunc\QTable.cs" />
     <Compile Include="ValueFunc\ValueFunctionModel.cs" />
     <Compile Include="ValueFunc\DQN.cs" />

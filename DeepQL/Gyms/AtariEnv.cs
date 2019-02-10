@@ -23,7 +23,7 @@ namespace DeepQL.Gyms
             ale.EnableSound = false;
             ale.EnableColorData = true;
             ale.EnableRestrictedActionSet = true;
-            ale.EnableColorAveraging = true;
+            ale.EnableColorAveraging = grayscaleObs;
             ale.RepeatActionProbability = 0;//0.25f;
             ale.Load(strRom);
 

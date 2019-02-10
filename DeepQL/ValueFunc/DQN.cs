@@ -5,6 +5,7 @@ using DeepQL.MemoryReplays;
 using DeepQL.Misc;
 using Neuro;
 using Neuro.Layers;
+using Neuro.Models;
 using Neuro.Optimizers;
 using Neuro.Tensors;
 
@@ -17,12 +18,14 @@ namespace DeepQL.ValueFunc
         {
             ImportanceSamplingWeights = new Tensor(new Shape(1, numberOfActions, 1, batchSize));
 
-            Model = new NeuralNetwork("dqn");
+            Net = new NeuralNetwork("dqn");
+            var Model = new Sequential();
             Model.AddLayer(new Flatten(inputShape));
             for (int i = 0; i < hiddenLayersNeurons.Length; ++i)
-                Model.AddLayer(new Dense(Model.LastLayer, hiddenLayersNeurons[i], Activation.ReLU));
+	            Model.AddLayer(new Dense(Model.LastLayer, hiddenLayersNeurons[i], Activation.ReLU));
             Model.AddLayer(new Dense(Model.LastLayer, numberOfActions, Activation.Linear));
-            Model.Optimize(new Adam(learningRate), new CustomHuberLoss(ImportanceSamplingWeights));
+            Net.Model = Model;
+            Net.Optimize(new Adam(learningRate), new CustomHuberLoss(ImportanceSamplingWeights));
         }
 
         protected DQN(Shape inputShape, int numberOfActions, float learningRate, float discountFactor, int batchSize, BaseExperienceReplay memory)
@@ -37,7 +40,7 @@ namespace DeepQL.ValueFunc
 
         public override Tensor GetOptimalAction(Tensor state)
         {
-            var qValues = Model.Predict(state);
+            var qValues = Net.Predict(state)[0];
             var action = new Tensor(new Shape(1));
             action[0] = qValues.ArgMax();
             return action;
@@ -52,17 +55,17 @@ namespace DeepQL.ValueFunc
                 throw new Exception("Target model update has to be positive.");
 
             if (TargetModel == null)
-                TargetModel = Model.Clone();
+                TargetModel = Net.Clone();
 
             if (!TargetModelUpdateOnEpisodeEnd)
             {
                 if (TargetModelUpdateInterval >= 1)
                 {
                     if (globalStep % (int)TargetModelUpdateInterval == 0)
-                        Model.CopyParametersTo(TargetModel);
+                        Net.CopyParametersTo(TargetModel);
                 }
                 else
-                    Model.SoftCopyParametersTo(TargetModel, TargetModelUpdateInterval);
+                    Net.SoftCopyParametersTo(TargetModel, TargetModelUpdateInterval);
             }
         }
 
@@ -75,7 +78,7 @@ namespace DeepQL.ValueFunc
         public override void OnEpisodeEnd(int episode)
         {
             if (TargetModelUpdateOnEpisodeEnd)
-                Model.CopyParametersTo(TargetModel);
+                Net.CopyParametersTo(TargetModel);
 
             if (TrainingsDone > 0)
             {
@@ -92,12 +95,12 @@ namespace DeepQL.ValueFunc
 
         public override void SaveState(string filename)
         {
-            Model.SaveStateXml(filename);
+            Net.SaveStateXml(filename);
         }
 
         public override void LoadState(string filename)
         {
-            Model.LoadStateXml(filename);
+            Net.LoadStateXml(filename);
         }
 
         protected void Train(List<Experience> experiences)
@@ -116,9 +119,9 @@ namespace DeepQL.ValueFunc
                 e.NextState.CopyBatchTo(0, i, nextStatesBatch);
             }
 
-            Tensor rewardsBatch = Model.Predict(statesBatch); // this is our original prediction
-            Tensor futureRewardsBatch = EnableDoubleDQN ? Model.Predict(nextStatesBatch) : null;
-            Tensor futureTargetRewardsBatch = TargetModel.Predict(nextStatesBatch);
+            Tensor rewardsBatch = Net.Predict(statesBatch)[0]; // this is our original prediction
+            Tensor futureRewardsBatch = EnableDoubleDQN ? Net.Predict(nextStatesBatch)[0] : null;
+            Tensor futureTargetRewardsBatch = TargetModel.Predict(nextStatesBatch)[0];
 
             List<float> absErrors = new List<float>();
             ImportanceSamplingWeights.Zero();
@@ -156,14 +159,17 @@ namespace DeepQL.ValueFunc
             ++TrainingsDone;
             PerEpisodeErrorAvg += (avgError - PerEpisodeErrorAvg) / TrainingsDone;
 
-            Model.Fit(statesBatch, rewardsBatch, -1, TrainingEpochs, 0, Track.Nothing);
+            Net.Fit(new []{statesBatch}, new []{rewardsBatch}, -1, TrainingEpochs, 0, Track.Nothing);
         }
 
         public override string GetParametersDescription()
         {
             List<int> hiddenInputs = new List<int>();
-            for (int i = 2; i < Model.LayersCount; ++i)
-                hiddenInputs.Add(Model.Layer(i).InputShape.Length);
+            if (Net.Model is Sequential seqModel)
+            {
+	            for (int i = 2; i < seqModel.LayersCount; ++i)
+		            hiddenInputs.Add(seqModel.GetLayers().ElementAt(i).InputShape.Length);
+            }
 
             return $"{base.GetParametersDescription()} batch_size={BatchSize} arch={string.Join("|", hiddenInputs)} target_upd_int={TargetModelUpdateInterval} double_dqn={EnableDoubleDQN} dueling_dqn={EnableDuelingDQN} train_epoch={TrainingEpochs} memory_int={MemoryInterval} target_upd_on_ep_end={TargetModelUpdateOnEpisodeEnd}\n{Memory.GetParametersDescription()}";
         }
@@ -179,7 +185,7 @@ namespace DeepQL.ValueFunc
         // Training loss will be clipped to [-DeltaClip, DeltaClip]
         //public float DeltaClip = float.PositiveInfinity;
         //public int ChartSaveInterval = 200;
-        protected NeuralNetwork Model;
+        protected NeuralNetwork Net;
         protected NeuralNetwork TargetModel;
         protected BaseExperienceReplay Memory;
 
