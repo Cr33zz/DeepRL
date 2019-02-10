@@ -11,12 +11,13 @@ namespace DeepQL.ValueFunc
 {
     public class DQNConv : DQN
     {
-        public DQNConv(int numberOfActions, float learningRate, float discountFactor, int batchSize, BaseExperienceReplay memory)
+        public DQNConv(int[] inputSize, int numberOfActions, float learningRate, float discountFactor, int batchSize, BaseExperienceReplay memory)
             :base(null, numberOfActions, learningRate, discountFactor, batchSize, memory)
         {
 			Tensor.SetOpMode(Tensor.OpMode.GPU);
 
-			Shape inputShape = new Shape(InputHeight, InputHeight, TemporalDataSize);
+			InputSize = inputSize;
+			Shape inputShape = new Shape(inputSize[0], inputSize[1], TemporalDataSize);
 
             Net = new NeuralNetwork("DQNConv");
             var Model = new Sequential();
@@ -28,12 +29,11 @@ namespace DeepQL.ValueFunc
 			Model.AddLayer(new Dense(Model.LastLayer, numberOfActions, Activation.Softmax));
 			Net.Model = Model;
 			Net.Optimize(new Adam(learningRate), new CustomHuberLoss(ImportanceSamplingWeights));
-
 		}
 
 		public override void OnStep(int step, int globalStep, Tensor state, Tensor action, float reward, Tensor nextState, bool done)
 		{
-			var nextStateScaled = RescaleState(state, InputWidth, InputHeight);
+			var nextStateScaled = RescaleState(state, InputSize[0], InputSize[1]);
 			var tempState = LastTemporalState;
 			UpdateTemporalData(nextStateScaled);
 			var nextTempState = Tensor.MergeIntoDepth(TemporalData);
@@ -69,8 +69,7 @@ namespace DeepQL.ValueFunc
 			return result;
         }
 
-        public const int InputWidth = 84;
-        public const int InputHeight = 84;
+        public int[] InputSize;
 		public const int TemporalDataSize = 4;
 		private Tensor LastTemporalState;
         private List<Tensor> TemporalData = new List<Tensor>();
