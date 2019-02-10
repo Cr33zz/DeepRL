@@ -16,8 +16,6 @@ namespace DeepQL.ValueFunc
         public DQN(Shape inputShape, int numberOfActions, int[] hiddenLayersNeurons, float learningRate, float discountFactor, int batchSize, BaseExperienceReplay memory)
             : this(inputShape, numberOfActions, learningRate, discountFactor, batchSize, memory)
         {
-            ImportanceSamplingWeights = new Tensor(new Shape(1, numberOfActions, 1, batchSize));
-
             Net = new NeuralNetwork("dqn");
             var Model = new Sequential();
             Model.AddLayer(new Flatten(inputShape));
@@ -36,9 +34,10 @@ namespace DeepQL.ValueFunc
             ErrorChart = new ChartGenerator($"dqn_error", "Q prediction error", "Episode");
             ErrorChart.AddSeries(0, "Abs error", System.Drawing.Color.LightGray);
             ErrorChart.AddSeries(1, $"Avg({ErrorAvg.N}) abs error", System.Drawing.Color.Firebrick);
-        }
+			ImportanceSamplingWeights = new Tensor(new Shape(1, numberOfActions, 1, batchSize));
+		}
 
-        public override Tensor GetOptimalAction(Tensor state)
+		public override Tensor GetOptimalAction(Tensor state)
         {
             var qValues = Net.Predict(state)[0];
             var action = new Tensor(new Shape(1));
@@ -159,7 +158,7 @@ namespace DeepQL.ValueFunc
             ++TrainingsDone;
             PerEpisodeErrorAvg += (avgError - PerEpisodeErrorAvg) / TrainingsDone;
 
-            Net.Fit(new []{statesBatch}, new []{rewardsBatch}, -1, TrainingEpochs, 0, Track.Nothing);
+            Net.Fit(new List<Data>{new Data(statesBatch, rewardsBatch)}, -1, TrainingEpochs, null, 0, Track.Nothing);
         }
 
         public override string GetParametersDescription()
@@ -193,7 +192,7 @@ namespace DeepQL.ValueFunc
         private float PerEpisodeErrorAvg;
         private readonly MovingAverage ErrorAvg = new MovingAverage(20);
         private int TrainingsDone;
-        private Tensor ImportanceSamplingWeights;
+        protected Tensor ImportanceSamplingWeights;
     }
 
     internal class CustomHuberLoss : Huber
