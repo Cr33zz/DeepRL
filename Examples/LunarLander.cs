@@ -36,8 +36,8 @@ namespace Examples
                 RenderFreq = 80,
             };
 
-            //agent.Train(1500, 1500);
-            agent.Load($"{agent.Name}_1500");
+            agent.Train(1500, 1500);
+            //agent.Load($"{agent.Name}_1500");
             agent.Test(100, 400, 2);
         }
     }

@@ -16,6 +16,7 @@ namespace DeepQL.ValueFunc
 
         public abstract void OnStep(int step, int globalStep, Tensor state, Tensor action, float reward, Tensor nextState, bool done);
         public abstract void OnTrain();
+        public virtual void OnReset(Tensor initialState) { }
         public virtual void OnEpisodeEnd(int episode) { }
         public virtual void SaveState(string filename) { }
         public virtual void LoadState(string filename) { }

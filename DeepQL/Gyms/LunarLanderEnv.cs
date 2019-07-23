@@ -6,7 +6,6 @@ using DeepQL.Environments;
 using DeepQL.Misc;
 using DeepQL.Spaces;
 using Neuro.Tensors;
-using Enum = Mono.CSharp.Enum;
 
 namespace DeepQL.Gyms
 {

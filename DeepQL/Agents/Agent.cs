@@ -40,6 +40,7 @@ namespace DeepQL.Agents
             for (int ep = 1; ep <= episodes; ++ep)
             {
                 LastObservation = Env.Reset();
+                OnReset(LastObservation);
 
                 float totalReward = 0;
                 int step = 0;
@@ -154,6 +155,7 @@ namespace DeepQL.Agents
         protected abstract Tensor GetOptimalAction();
         protected abstract void OnStep(int step, int globalStep, Tensor action, float reward, Tensor nextState, bool done);
         protected abstract void OnTrain();
+        protected virtual void OnReset(Tensor initialState) { }
         protected virtual void OnEpisodeEnd(int episode) { }
 
         protected virtual string GetParametersDescription()

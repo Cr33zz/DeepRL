@@ -28,6 +28,11 @@ namespace DeepQL.Agents
             ValueFuncModel.OnTrain();
         }
 
+        protected override void OnReset(Tensor initialState)
+        {
+            ValueFuncModel.OnReset(initialState);
+        }
+
         protected override void OnEpisodeEnd(int episode)
         {
             ValueFuncModel.OnEpisodeEnd(episode);

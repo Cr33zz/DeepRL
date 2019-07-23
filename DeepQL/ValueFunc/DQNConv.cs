@@ -31,14 +31,32 @@ namespace DeepQL.ValueFunc
 			Net.Optimize(new Adam(learningRate), new CustomHuberLoss(ImportanceSamplingWeights));
 		}
 
-		public override void OnStep(int step, int globalStep, Tensor state, Tensor action, float reward, Tensor nextState, bool done)
+        public override Tensor GetOptimalAction(Tensor state)
+        {
+            // we have to use last TemporalDataSize frames (LastTemporalState) instead of single last frame (state)
+            var qValues = Net.Predict(LastTemporalState)[0];
+            var action = new Tensor(new Shape(1));
+            action[0] = qValues.ArgMax();
+            return action;
+        }
+
+        public override void OnReset(Tensor initialState)
+        {
+            var initialStateScaled = RescaleState(initialState, InputSize[0], InputSize[1]);
+            TemporalData.Clear();
+            UpdateTemporalData(initialStateScaled);
+            LastTemporalState = Tensor.MergeIntoDepth(TemporalData, TemporalDataSize);
+        }
+
+        public override void OnStep(int step, int globalStep, Tensor state, Tensor action, float reward, Tensor nextState, bool done)
 		{
 			var nextStateScaled = RescaleState(state, InputSize[0], InputSize[1]);
 			var tempState = LastTemporalState;
 			UpdateTemporalData(nextStateScaled);
-			var nextTempState = Tensor.MergeIntoDepth(TemporalData);
-			if (TemporalData.Count >= TemporalDataSize && tempState != null)
-				base.OnStep(step, globalStep, tempState, action, reward, nextTempState, done);
+			var nextTempState = Tensor.MergeIntoDepth(TemporalData, TemporalDataSize);
+
+			base.OnStep(step, globalStep, tempState, action, reward, nextTempState, done);
+
 			LastTemporalState = nextTempState;
 		}
 
